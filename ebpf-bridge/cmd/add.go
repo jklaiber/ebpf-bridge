@@ -9,8 +9,8 @@ var (
 )
 
 var linkCmd = &cobra.Command{
-	Use:   "link",
-	Short: "Connect two network interfaces using eBPF",
+	Use:   "add",
+	Short: "Add bridge between two interfaces",
 }
 
 func init() {

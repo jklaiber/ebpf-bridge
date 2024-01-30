@@ -1,0 +1,96 @@
+<mxfile host="app.diagrams.net" modified="2024-01-30T13:15:03.013Z" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" etag="oCoAEgMqVdnTwkGtFJF7" version="23.0.1" type="device">
+  <diagram name="Page-1" id="inftlAnXoV4IZwqzxbVP">
+    <mxGraphModel dx="1825" dy="768" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="SRz1SQJa659c_ixB1NJl-2" value="devmap_XY" style="swimlane;whiteSpace=wrap;html=1;fontFamily=Courier New;fillColor=#FFFFFF;" parent="1" vertex="1">
+          <mxGeometry x="113" y="199" width="160" height="145" as="geometry" />
+        </mxCell>
+        <mxCell id="SRz1SQJa659c_ixB1NJl-25" value="" style="group;fontFamily=Courier New;" parent="SRz1SQJa659c_ixB1NJl-2" connectable="0" vertex="1">
+          <mxGeometry x="20" y="40" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="SRz1SQJa659c_ixB1NJl-26" value="&lt;font face=&quot;Courier New&quot;&gt;&lt;b&gt;interface_1&lt;/b&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="SRz1SQJa659c_ixB1NJl-25" vertex="1">
+          <mxGeometry width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="SRz1SQJa659c_ixB1NJl-27" value="" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="SRz1SQJa659c_ixB1NJl-25" vertex="1">
+          <mxGeometry x="90" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="SRz1SQJa659c_ixB1NJl-28" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;labelBackgroundColor=none;fillColor=#000000;" parent="SRz1SQJa659c_ixB1NJl-25" vertex="1">
+          <mxGeometry x="100" y="10" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="SRz1SQJa659c_ixB1NJl-29" value="" style="group;fontFamily=Courier New;" parent="SRz1SQJa659c_ixB1NJl-2" connectable="0" vertex="1">
+          <mxGeometry x="20" y="70" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="SRz1SQJa659c_ixB1NJl-30" value="&lt;font face=&quot;Courier New&quot;&gt;&lt;b&gt;interface_2&lt;/b&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="SRz1SQJa659c_ixB1NJl-29" vertex="1">
+          <mxGeometry width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="SRz1SQJa659c_ixB1NJl-31" value="" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" parent="SRz1SQJa659c_ixB1NJl-29" vertex="1">
+          <mxGeometry x="90" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="SRz1SQJa659c_ixB1NJl-32" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;labelBackgroundColor=none;fillColor=#000000;" parent="SRz1SQJa659c_ixB1NJl-29" vertex="1">
+          <mxGeometry x="100" y="10" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="sdiTjnfEd_FUuzcyTcTG-1" value="" style="group;fontFamily=Courier New;" connectable="0" vertex="1" parent="SRz1SQJa659c_ixB1NJl-2">
+          <mxGeometry x="20" y="100" width="120" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sdiTjnfEd_FUuzcyTcTG-2" value="&lt;font face=&quot;Courier New&quot;&gt;&lt;b&gt;monitor_int&lt;/b&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="sdiTjnfEd_FUuzcyTcTG-1">
+          <mxGeometry width="90" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sdiTjnfEd_FUuzcyTcTG-3" value="" style="whiteSpace=wrap;html=1;aspect=fixed;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="sdiTjnfEd_FUuzcyTcTG-1">
+          <mxGeometry x="90" width="30" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="sdiTjnfEd_FUuzcyTcTG-4" value="" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;labelBackgroundColor=none;fillColor=#000000;" vertex="1" parent="sdiTjnfEd_FUuzcyTcTG-1">
+          <mxGeometry x="100" y="10" width="10" height="10" as="geometry" />
+        </mxCell>
+        <mxCell id="SRz1SQJa659c_ixB1NJl-73" value="&lt;font face=&quot;Verdana&quot;&gt;&lt;span style=&quot;font-size: 14px;&quot;&gt;&lt;b&gt;ebpf-bridge&lt;br&gt;service&lt;br&gt;&lt;/b&gt;&lt;/span&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+          <mxGeometry x="-360" y="156.9" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="SRz1SQJa659c_ixB1NJl-97" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://devopedia.org/images/article/135/5996.1544439861.png;" parent="1" vertex="1">
+          <mxGeometry x="-260" y="133.9" width="43" height="43" as="geometry" />
+        </mxCell>
+        <mxCell id="SRz1SQJa659c_ixB1NJl-98" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://ebpf.foundation/wp-content/uploads/sites/9/2023/03/ebpf-icon-292x300.png;" parent="1" vertex="1">
+          <mxGeometry x="259" y="183" width="33" height="33.9" as="geometry" />
+        </mxCell>
+        <mxCell id="sdiTjnfEd_FUuzcyTcTG-5" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://cdn-icons-png.flaticon.com/512/969/969356.png;" vertex="1" parent="1">
+          <mxGeometry x="320" y="264" width="41" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="sdiTjnfEd_FUuzcyTcTG-6" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://cdn-icons-png.flaticon.com/512/969/969356.png;" vertex="1" parent="1">
+          <mxGeometry x="320" y="216.9" width="41" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="sdiTjnfEd_FUuzcyTcTG-7" value="" style="shape=image;verticalLabelPosition=bottom;labelBackgroundColor=default;verticalAlign=top;aspect=fixed;imageAspect=0;image=https://cdn-icons-png.flaticon.com/512/969/969356.png;" vertex="1" parent="1">
+          <mxGeometry x="320" y="310" width="41" height="41" as="geometry" />
+        </mxCell>
+        <mxCell id="sdiTjnfEd_FUuzcyTcTG-8" value="" style="endArrow=none;html=1;rounded=0;strokeWidth=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="SRz1SQJa659c_ixB1NJl-28" target="sdiTjnfEd_FUuzcyTcTG-6">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="240" y="470" as="sourcePoint" />
+            <mxPoint x="290" y="420" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="300" y="254" />
+              <mxPoint x="300" y="237" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sdiTjnfEd_FUuzcyTcTG-9" value="" style="endArrow=none;html=1;rounded=0;strokeWidth=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="SRz1SQJa659c_ixB1NJl-32" target="sdiTjnfEd_FUuzcyTcTG-5">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="253" y="264" as="sourcePoint" />
+            <mxPoint x="330" y="247" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sdiTjnfEd_FUuzcyTcTG-10" value="" style="endArrow=none;html=1;rounded=0;strokeWidth=2;entryX=0;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="sdiTjnfEd_FUuzcyTcTG-4" target="sdiTjnfEd_FUuzcyTcTG-7">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="253" y="294" as="sourcePoint" />
+            <mxPoint x="330" y="294" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="300" y="314" />
+              <mxPoint x="300" y="330" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="sdiTjnfEd_FUuzcyTcTG-11" value="&lt;font face=&quot;Courier New&quot;&gt;&lt;b&gt;$ ebpf-bridge add -i interface_1 -i interface_2 -m monitor_int&lt;/b&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f5f5f5;fontColor=#333333;strokeColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="-360" y="40" width="460" height="40" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

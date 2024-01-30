@@ -1,0 +1,14 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.dylib
+*.out
+*.so
+
+# Other
+.DS_Store
+*.swp
+.vscode/
+.VSCodeCounter
+out
