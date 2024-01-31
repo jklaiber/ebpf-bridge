@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: GPL-2.0
 
-#include <bpf/bpf_helpers.h>
+#include <linux/types.h>
 #include <linux/bpf.h>
+#include <bpf/bpf_endian.h>
+#include <bpf/bpf_helpers.h>
 
 struct {
-  __uint(type, BPF_MAP_TYPE_DEVMAP_HASH);
+  __uint(type, BPF_MAP_TYPE_DEVMAP);
   __uint(max_entries, 3);
-  __uint(key_size, sizeof(int));
-  __uint(value_size, sizeof(int));
+  __type(key, __u32);
+  __type(value, __u32);
+  __uint(pinning, LIBBPF_PIN_BY_NAME);
 } devmap SEC(".maps");
 
-SEC("bridge")
+SEC("xdp")
 int xdp_bridge(struct xdp_md *ctx) {
-  return bpf_redirect_map(&devmap, 0, BPF_F_EXCLUDE_INGRESS);
+  return bpf_redirect_map(&devmap, 0, BPF_F_BROADCAST | BPF_F_EXCLUDE_INGRESS);
 }
 
 char _license[] SEC("license") = "GPL";
