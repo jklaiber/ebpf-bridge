@@ -9,9 +9,7 @@ import (
 	"github.com/vishvananda/netlink"
 )
 
-var log = logging.DefaultLogger.WithField("subsystem", Subsystem)
-
-const Subsystem = "linker"
+var log = logging.DefaultLogger.WithField("subsystem", "linker")
 
 type Linker interface {
 	Attach() error

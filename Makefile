@@ -45,6 +45,9 @@ test-coverage: ## Run go tests with coverage
 
 fix-clang-style: ## Fix the clang style
 	find . -iname *.h -o -iname *.c | xargs clang-format -i
+
+proto-gen: ## Generate protobuf files
+	protoc --go_out=. --go_opt=Mpkg/messaging/messaging.proto=pkg/messaging --go-grpc_out=. --go-grpc_opt=Mpkg/messaging/messaging.proto=pkg/messaging pkg/messaging/messaging.proto --experimental_allow_proto3_optional
 	
 help: ## Show this help message
 	@echo ''

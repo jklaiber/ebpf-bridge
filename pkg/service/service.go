@@ -1,16 +1,48 @@
 package service
 
-import "github.com/jklaiber/ebpf-bridge/pkg/manager"
+import (
+	"context"
+
+	"github.com/jklaiber/ebpf-bridge/pkg/logging"
+	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
+)
+
+var log = logging.DefaultLogger.WithField("subsystem", "bridge-service")
 
 const SocketPath = "/tmp/ebpf-bridge.sock"
 
 type Service interface {
-	Start() error
-	Stop() error
+	Start()
+	Stop()
 }
 
 type EbpfBridgeService struct {
-	listener      *Listener
-	messages      chan string
-	bridgeManager manager.Manager
+	messagingServer messaging.Server
+	ctx             context.Context
+	cancel          context.CancelFunc
+}
+
+func NewEbpfBridgeService() *EbpfBridgeService {
+	messagingServer := messaging.NewMessagingServer()
+	return &EbpfBridgeService{
+		messagingServer: messagingServer,
+	}
+}
+
+func (s *EbpfBridgeService) Start() {
+	s.ctx, s.cancel = context.WithCancel(context.Background())
+	go func() {
+		select {
+		case <-s.ctx.Done():
+			log.Info("Shutting down")
+			s.messagingServer.Stop()
+		default:
+			log.Info("Starting service")
+			s.messagingServer.Start()
+		}
+	}()
+}
+
+func (s *EbpfBridgeService) Stop() {
+	s.cancel()
 }

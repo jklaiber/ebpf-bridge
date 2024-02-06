@@ -1,0 +1,43 @@
+syntax = "proto3";
+
+package messaging;
+
+message AddCommand {
+    string name = 1;
+    int32 iface1 = 2;
+    int32 iface2 = 3;
+    optional int32 monitor = 4;
+}
+
+message AddResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message RemoveCommand {
+    string name = 1;
+}
+
+message RemoveResponse {
+    bool success = 1;
+    string message = 2;
+}
+
+message BridgeDescription {
+    string name = 1;
+    int32 iface1 = 2;
+    int32 iface2 = 3;
+    optional int32 monitor = 4;
+}
+
+message ListCommand {}
+
+message ListResponse {
+    repeated BridgeDescription bridges = 1;
+}
+
+service EbpfBridgeController {
+    rpc AddBridge(AddCommand) returns (AddResponse);
+    rpc RemoveBridge(RemoveCommand) returns (RemoveResponse);
+    rpc ListBridges(ListCommand) returns (ListResponse);
+}

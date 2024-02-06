@@ -1,42 +1,41 @@
-package manager
+package bridge
 
 import (
 	"fmt"
 
-	"github.com/jklaiber/ebpf-bridge/pkg/bridge"
 	"github.com/vishvananda/netlink"
 )
 
 type Manager interface {
-	Add(name string, iface1 string, iface2 string, monitorIface string) error
+	Add(name string, iface1 int, iface2 int, monitorIface int) error
 	Remove(name string) error
 	List()
 }
 
 type BridgeManager struct {
-	bridges map[string]*bridge.EbpfBridge
+	bridges map[string]*EbpfBridge
 }
 
 func NewBridgeManager() *BridgeManager {
 	return &BridgeManager{
-		bridges: make(map[string]*bridge.EbpfBridge),
+		bridges: make(map[string]*EbpfBridge),
 	}
 }
 
-func (b *BridgeManager) Add(name string, iface1 string, iface2 string, monitorIface string) error {
-	niface1, err := netlink.LinkByName(iface1)
+func (b *BridgeManager) Add(name string, iface1 int, iface2 int, monitorIface int) error {
+	niface1, err := netlink.LinkByIndex(iface1)
 	if err != nil {
 		return fmt.Errorf("failed to get iface1: %w", err)
 	}
-	niface2, err := netlink.LinkByName(iface2)
+	niface2, err := netlink.LinkByIndex(iface2)
 	if err != nil {
 		return fmt.Errorf("failed to get iface2: %w", err)
 	}
-	nmonitorIface, err := netlink.LinkByName(monitorIface)
+	nmonitorIface, err := netlink.LinkByIndex(monitorIface)
 	if err != nil {
 		return fmt.Errorf("failed to get monitorIface: %w", err)
 	}
-	ebpfBridge := bridge.NewEbpfBridge(name, niface1, niface2, nmonitorIface)
+	ebpfBridge := NewEbpfBridge(name, niface1, niface2, nmonitorIface)
 	err = ebpfBridge.Add()
 	if err != nil {
 		return err
