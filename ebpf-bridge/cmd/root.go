@@ -1,13 +1,11 @@
 package cmd
 
 import (
-	"os"
-
-	"github.com/sirupsen/logrus"
+	"github.com/jklaiber/ebpf-bridge/pkg/logging"
 	"github.com/spf13/cobra"
 )
 
-var log = logrus.New()
+var log = logging.DefaultLogger.WithField("subsystem", "cli")
 
 var rootCmd = &cobra.Command{
 	Use:   "ebpf-bridge",
@@ -17,15 +15,5 @@ var rootCmd = &cobra.Command{
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		log.Fatal(err)
-	}
-}
-
-func init() {
-	checkIsRoot()
-}
-
-func checkIsRoot() {
-	if os.Getuid() != 0 {
-		log.Fatal("You must be root to run this program.")
 	}
 }

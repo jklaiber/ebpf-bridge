@@ -37,6 +37,7 @@ func (s *MessagingServer) AddBridge(ctx context.Context, in *AddCommand) (*AddRe
 	log.Infof("Add command received: %v", in)
 	err := s.bridgeManager.Add(in.Name, int(in.Iface1), int(in.Iface2), int(5))
 	if err != nil {
+		log.Errorf("Failed to add bridge: %v", err)
 		return &AddResponse{Success: false}, nil
 	}
 	return &AddResponse{Success: true}, nil
@@ -46,6 +47,7 @@ func (s *MessagingServer) RemoveBridge(ctx context.Context, in *RemoveCommand) (
 	log.Infof("Remove command received: %v", in)
 	err := s.bridgeManager.Remove(in.Name)
 	if err != nil {
+		log.Errorf("Failed to remove bridge: %v", err)
 		return &RemoveResponse{Success: false}, nil
 	}
 	return &RemoveResponse{Success: true}, nil
@@ -58,10 +60,15 @@ func (s *MessagingServer) ListBridges(ctx context.Context, in *ListCommand) (*Li
 
 func (s *MessagingServer) Start() {
 	os.Remove(SOCKET)
+
 	RegisterEbpfBridgeControllerServer(s.server, s)
 	lis, err := net.Listen(PROTOCOL, SOCKET)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
+	}
+
+	if err := os.Chmod(SOCKET, 0777); err != nil {
+		log.Fatalf("failed to change socket permissions: %v", err)
 	}
 
 	go func() {

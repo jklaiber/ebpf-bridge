@@ -2,9 +2,11 @@ package messaging
 
 import (
 	context "context"
+	"fmt"
 	"time"
 
 	grpc "google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Client interface {
@@ -28,14 +30,14 @@ func NewMessagingClient() *MessagingClient {
 	client := NewEbpfBridgeControllerClient(conn)
 
 	return &MessagingClient{
-		conn:   conn,
-		client: client,
+		conn:    conn,
+		client:  client,
+		timeout: 5 * time.Second,
 	}
 }
 
 func connect() (*grpc.ClientConn, error) {
-	// return grpc.Dial("", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	return grpc.Dial("unix:///tmp/ebpf_bridge.sock", grpc.WithInsecure())
+	return grpc.Dial(fmt.Sprintf("%s://%s", PROTOCOL, SOCKET), grpc.WithTransportCredentials(insecure.NewCredentials()))
 }
 
 func (mc *MessagingClient) Close() {
@@ -47,8 +49,7 @@ func (mc *MessagingClient) Close() {
 }
 
 func (mc *MessagingClient) AddBridge(in *AddCommand) (*AddResponse, error) {
-	// ctx, cancel := context.WithTimeout(context.Background(), mc.timeout)
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), mc.timeout)
 	defer cancel()
 	return mc.client.AddBridge(ctx, in)
 }

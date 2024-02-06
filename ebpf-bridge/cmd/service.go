@@ -14,6 +14,7 @@ var serviceCmd = &cobra.Command{
 	Use:   "start-service",
 	Short: "Start the ebpf-bridge managing service",
 	Run: func(cmd *cobra.Command, args []string) {
+		checkIsRoot()
 		service := service.NewEbpfBridgeService()
 		service.Start()
 		sigChan := make(chan os.Signal, 1)
@@ -28,4 +29,10 @@ var serviceCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(serviceCmd)
+}
+
+func checkIsRoot() {
+	if os.Getuid() != 0 {
+		log.Fatal("You must be root to run this program.")
+	}
 }
