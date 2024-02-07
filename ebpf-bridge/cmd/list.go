@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"fmt"
+
+	"github.com/jklaiber/ebpf-bridge/pkg/command"
 	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
-	"github.com/jklaiber/ebpf-bridge/pkg/printer"
 	"github.com/spf13/cobra"
 )
 
@@ -13,11 +15,12 @@ var listCmd = &cobra.Command{
 		messagingClient := messaging.NewMessagingClient()
 		defer messagingClient.Close()
 
-		msg := &messaging.ListCommand{}
-		returnMsg, _ := messagingClient.ListBridges(msg)
+		listCommand := command.NewListCommand(messagingClient)
+		_, err := listCommand.Execute()
 
-		printer := &printer.PrettyPrinter{}
-		printer.PrintBridgeDescriptions(returnMsg.Bridges)
+		if err != nil {
+			fmt.Println(err)
+		}
 	},
 }
 

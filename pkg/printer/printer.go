@@ -9,12 +9,12 @@ import (
 )
 
 type Printer interface {
-	PrintBridgeDescriptions(bridges []*messaging.BridgeDescription)
+	PrintBridgeDescriptions(bridges []*messaging.BridgeDescription) string
 }
 
 type PrettyPrinter struct{}
 
-func (p *PrettyPrinter) PrintBridgeDescriptions(bridges []*messaging.BridgeDescription) {
+func (p *PrettyPrinter) PrintBridgeDescriptions(bridges []*messaging.BridgeDescription) string {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name", "Iface1", "Iface2", "Monitor-Iface"})
@@ -27,7 +27,7 @@ func (p *PrettyPrinter) PrintBridgeDescriptions(bridges []*messaging.BridgeDescr
 		}
 		t.AppendSeparator()
 	}
-	t.Render()
+	return t.Render()
 }
 
 func GetIfaceNameForIndex(index int32) string {

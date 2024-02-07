@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/jklaiber/ebpf-bridge/pkg/command"
 	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
 	"github.com/spf13/cobra"
 )
@@ -14,12 +15,12 @@ var removeCmd = &cobra.Command{
 		messagingClient := messaging.NewMessagingClient()
 		defer messagingClient.Close()
 
-		msg := &messaging.RemoveCommand{
-			Name: bridgeName,
+		removeCommand := command.NewRemoveCommand(messagingClient, bridgeName)
+		returnMsg, err := removeCommand.Execute()
+		if err != nil {
+			fmt.Println(err)
 		}
-		returnMsg, _ := messagingClient.RemoveBridge(msg)
-
-		fmt.Println(returnMsg.Message)
+		fmt.Println(returnMsg)
 	},
 }
 

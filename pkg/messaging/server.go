@@ -68,9 +68,15 @@ func (s *MessagingServer) RemoveBridge(ctx context.Context, in *RemoveCommand) (
 	err := s.bridgeManager.Remove(in.Name)
 	if err != nil {
 		log.Errorf("Failed to remove bridge: %v", err)
-		return &RemoveResponse{Success: false}, nil
+		return &RemoveResponse{
+			Success: false,
+			Message: fmt.Sprintf("failed to remove bridge: %v", err),
+		}, nil
 	}
-	return &RemoveResponse{Success: true}, nil
+	return &RemoveResponse{
+		Success: true,
+		Message: fmt.Sprintf("Bridge %s removed", in.Name),
+	}, nil
 }
 
 func (s *MessagingServer) ListBridges(ctx context.Context, in *ListCommand) (*ListResponse, error) {

@@ -33,6 +33,6 @@ func init() {
 
 func checkIsRoot() {
 	if os.Getuid() != 0 {
-		log.Fatal("You must be root to run this program.")
+		log.Fatal("The ebpf-bridge service must be run as root.")
 	}
 }

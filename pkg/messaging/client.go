@@ -10,6 +10,7 @@ import (
 )
 
 type Client interface {
+	Close()
 	AddBridge(in *AddCommand) (*AddResponse, error)
 	RemoveBridge(in *RemoveCommand) (*RemoveResponse, error)
 	ListBridges(in *ListCommand) (*ListResponse, error)
