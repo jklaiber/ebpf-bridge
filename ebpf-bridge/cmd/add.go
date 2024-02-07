@@ -36,12 +36,14 @@ var addCmd = &cobra.Command{
 		}
 
 		if monitorIface != "" {
-			// monitorIfaceIndex, err := netlink.LinkByName(monitorIface)
-			// if err != nil {
-			// 	fmt.Println(err)
-			// }
+			monitorIfaceIndex, err := netlink.LinkByName(monitorIface)
+			if err != nil {
+				fmt.Println(err)
+			}
 			msg.Iface1 = int32(iface1Index.Attrs().Index)
 			msg.Iface2 = int32(iface2Index.Attrs().Index)
+			monitorValue := int32(monitorIfaceIndex.Attrs().Index)
+			msg.Monitor = &monitorValue
 		} else {
 			msg.Iface1 = int32(iface1Index.Attrs().Index)
 			msg.Iface2 = int32(iface2Index.Attrs().Index)

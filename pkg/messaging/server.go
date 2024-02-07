@@ -35,10 +35,20 @@ func NewMessagingServer() *MessagingServer {
 
 func (s *MessagingServer) AddBridge(ctx context.Context, in *AddCommand) (*AddResponse, error) {
 	log.Infof("Add command received: %v", in)
-	err := s.bridgeManager.Add(in.Name, int(in.Iface1), int(in.Iface2), int(5))
-	if err != nil {
-		log.Errorf("Failed to add bridge: %v", err)
-		return &AddResponse{Success: false}, nil
+	if in.Monitor != nil {
+		log.Info("Monitor is not nil")
+		monitorValue := int(*in.Monitor)
+		err := s.bridgeManager.Add(in.Name, int(in.Iface1), int(in.Iface2), &monitorValue)
+		if err != nil {
+			log.Errorf("Failed to add bridge: %v", err)
+			return &AddResponse{Success: false}, nil
+		}
+	} else {
+		err := s.bridgeManager.Add(in.Name, int(in.Iface1), int(in.Iface2), nil)
+		if err != nil {
+			log.Errorf("Failed to add bridge: %v", err)
+			return &AddResponse{Success: false}, nil
+		}
 	}
 	return &AddResponse{Success: true}, nil
 }

@@ -7,4 +7,5 @@ import (
 type Bpf interface {
 	ReadBpfObjects() (*bpfObjects, error)
 	ReadBpfSpecs() (*ebpf.CollectionSpec, error)
+	LoadPinnedMap(mapPath string) (*ebpf.Map, error)
 }

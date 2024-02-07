@@ -31,3 +31,11 @@ func (b *BpfLinux) ReadBpfSpecs() (*ebpf.CollectionSpec, error) {
 	}
 	return specs, nil
 }
+
+func (b *BpfLinux) LoadPinnedMap(mapPath string) (*ebpf.Map, error) {
+	m, err := ebpf.LoadPinnedMap(mapPath, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load pinned map: %w", err)
+	}
+	return m, nil
+}
