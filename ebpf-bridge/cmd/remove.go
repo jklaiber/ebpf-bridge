@@ -17,16 +17,9 @@ var removeCmd = &cobra.Command{
 		msg := &messaging.RemoveCommand{
 			Name: bridgeName,
 		}
-		returnMsg, err := messagingClient.RemoveBridge(msg)
-		if err != nil {
-			fmt.Println(err)
-		}
+		returnMsg, _ := messagingClient.RemoveBridge(msg)
 
-		if returnMsg.Success {
-			fmt.Printf("Bridge %s removed\n", bridgeName)
-		} else {
-			fmt.Printf("Failed to remove bridge %s\n", bridgeName)
-		}
+		fmt.Println(returnMsg.Message)
 	},
 }
 

@@ -19,11 +19,11 @@ type Bridge interface {
 type EbpfBridge struct {
 	bpf          bpf.Bpf
 	Name         string
-	iface1       netlink.Link
-	iface2       netlink.Link
-	monitorIface netlink.Link
-	iface1Linker linker.Linker
-	iface2Linker linker.Linker
+	Iface1       netlink.Link
+	Iface2       netlink.Link
+	MonitorIface netlink.Link
+	Iface1Linker linker.Linker
+	Iface2Linker linker.Linker
 	mapUuid      string
 }
 
@@ -31,9 +31,9 @@ func NewEbpfBridge(name string, iface1 netlink.Link, iface2 netlink.Link, monito
 	return &EbpfBridge{
 		bpf:          &bpf.BpfLinux{},
 		Name:         name,
-		iface1:       iface1,
-		iface2:       iface2,
-		monitorIface: monitorIface,
+		Iface1:       iface1,
+		Iface2:       iface2,
+		MonitorIface: monitorIface,
 		mapUuid:      uuid.New().String(),
 	}
 }
@@ -43,24 +43,24 @@ func (e *EbpfBridge) Add() error {
 	if err != nil {
 		return fmt.Errorf("failed to read bpf objects: %w", err)
 	}
-	linkerIface1 := linker.NewXdpLinker(e.iface1, bpfObjects.XdpBridge)
-	e.iface1Linker = linkerIface1
-	linkerIface2 := linker.NewXdpLinker(e.iface2, bpfObjects.XdpBridge)
-	e.iface2Linker = linkerIface2
+	linkerIface1 := linker.NewXdpLinker(e.Iface1, bpfObjects.XdpBridge)
+	e.Iface1Linker = linkerIface1
+	linkerIface2 := linker.NewXdpLinker(e.Iface2, bpfObjects.XdpBridge)
+	e.Iface2Linker = linkerIface2
 
 	err = bpfObjects.Devmap.Pin(PinPath + e.mapUuid)
 	if err != nil {
 		return fmt.Errorf("failed to pin devmap: %w", err)
 	}
 
-	if err := bpfObjects.Devmap.Put(uint32(0), uint32(e.iface1.Attrs().Index)); err != nil {
+	if err := bpfObjects.Devmap.Put(uint32(0), uint32(e.Iface1.Attrs().Index)); err != nil {
 		return fmt.Errorf("failed to put iface1 into devmap: %w", err)
 	}
-	if err := bpfObjects.Devmap.Put(uint32(1), uint32(e.iface2.Attrs().Index)); err != nil {
+	if err := bpfObjects.Devmap.Put(uint32(1), uint32(e.Iface2.Attrs().Index)); err != nil {
 		return fmt.Errorf("failed to put iface2 into devmap: %w", err)
 	}
-	if e.monitorIface != nil {
-		if err := bpfObjects.Devmap.Put(uint32(2), uint32(e.monitorIface.Attrs().Index)); err != nil {
+	if e.MonitorIface != nil {
+		if err := bpfObjects.Devmap.Put(uint32(2), uint32(e.MonitorIface.Attrs().Index)); err != nil {
 			return fmt.Errorf("failed to put monitorIface into devmap: %w", err)
 		}
 	}
@@ -77,11 +77,11 @@ func (e *EbpfBridge) Add() error {
 }
 
 func (e *EbpfBridge) Remove() error {
-	err := e.iface1Linker.Detach()
+	err := e.Iface1Linker.Detach()
 	if err != nil {
 		return fmt.Errorf("failed to detach iface1: %w", err)
 	}
-	err = e.iface2Linker.Detach()
+	err = e.Iface2Linker.Detach()
 	if err != nil {
 		return fmt.Errorf("failed to detach iface2: %w", err)
 	}

@@ -48,16 +48,8 @@ var addCmd = &cobra.Command{
 			msg.Iface1 = int32(iface1Index.Attrs().Index)
 			msg.Iface2 = int32(iface2Index.Attrs().Index)
 		}
-		returnMsg, err := messagingClient.AddBridge(msg)
-		if err != nil {
-			fmt.Println(err)
-		}
-
-		if returnMsg.Success {
-			fmt.Printf("Bridge %s added\n", bridgeName)
-		} else {
-			fmt.Printf("Failed to add bridge %s\n", bridgeName)
-		}
+		returnMsg, _ := messagingClient.AddBridge(msg)
+		fmt.Println(returnMsg.Message)
 	},
 }
 

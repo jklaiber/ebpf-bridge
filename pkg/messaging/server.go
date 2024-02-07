@@ -2,6 +2,7 @@ package messaging
 
 import (
 	context "context"
+	"fmt"
 	"net"
 	"os"
 
@@ -41,16 +42,25 @@ func (s *MessagingServer) AddBridge(ctx context.Context, in *AddCommand) (*AddRe
 		err := s.bridgeManager.Add(in.Name, int(in.Iface1), int(in.Iface2), &monitorValue)
 		if err != nil {
 			log.Errorf("Failed to add bridge: %v", err)
-			return &AddResponse{Success: false}, nil
+			return &AddResponse{
+				Success: false,
+				Message: fmt.Sprintf("failed to add bridge: %v", err),
+			}, nil
 		}
 	} else {
 		err := s.bridgeManager.Add(in.Name, int(in.Iface1), int(in.Iface2), nil)
 		if err != nil {
 			log.Errorf("Failed to add bridge: %v", err)
-			return &AddResponse{Success: false}, nil
+			return &AddResponse{
+				Success: false,
+				Message: fmt.Sprintf("failed to add bridge: %v", err),
+			}, nil
 		}
 	}
-	return &AddResponse{Success: true}, nil
+	return &AddResponse{
+		Success: true,
+		Message: fmt.Sprintf("Bridge %s added", in.Name),
+	}, nil
 }
 
 func (s *MessagingServer) RemoveBridge(ctx context.Context, in *RemoveCommand) (*RemoveResponse, error) {
@@ -64,8 +74,18 @@ func (s *MessagingServer) RemoveBridge(ctx context.Context, in *RemoveCommand) (
 }
 
 func (s *MessagingServer) ListBridges(ctx context.Context, in *ListCommand) (*ListResponse, error) {
-	log.Printf("List command received: %v", in)
-	return &ListResponse{Bridges: []*BridgeDescription{}}, nil
+	log.Println("List command received")
+	bridges := s.bridgeManager.List()
+	var bridgeDescriptions []*BridgeDescription
+	for _, bridge := range bridges {
+		bridgeDescriptions = append(bridgeDescriptions, &BridgeDescription{
+			Name:    bridge.Name,
+			Iface1:  bridge.Iface1,
+			Iface2:  bridge.Iface2,
+			Monitor: bridge.Monitor,
+		})
+	}
+	return &ListResponse{Bridges: bridgeDescriptions}, nil
 }
 
 func (s *MessagingServer) Start() {

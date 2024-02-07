@@ -9,7 +9,7 @@ import (
 type Manager interface {
 	Add(name string, iface1 int, iface2 int, monitorIface *int) error
 	Remove(name string) error
-	List()
+	List() []BridgeDescription
 }
 
 type BridgeManager struct {
@@ -50,17 +50,6 @@ func (b *BridgeManager) Add(name string, iface1 int, iface2 int, monitorIface *i
 		}
 		b.bridges[name] = ebpfBridge
 	}
-	// nmonitorIface, err := netlink.LinkByIndex(monitorIface)
-	// if err != nil {
-	// 	return fmt.Errorf("failed to get monitorIface: %w", err)
-	// }
-	// ebpfBridge := NewEbpfBridge(name, niface1, niface2, nmonitorIface)
-	// ebpfBridge := NewEbpfBridge(name, niface1, niface2, nil)
-	// err = ebpfBridge.Add()
-	// if err != nil {
-	// 	return err
-	// }
-	// b.bridges[name] = ebpfBridge
 	return nil
 }
 
@@ -77,8 +66,31 @@ func (b *BridgeManager) Remove(name string) error {
 	return nil
 }
 
-func (b *BridgeManager) List() {
-	for name, _ := range b.bridges {
-		println(name)
+type BridgeDescription struct {
+	Name    string
+	Iface1  int32
+	Iface2  int32
+	Monitor *int32
+}
+
+func (b *BridgeManager) List() []BridgeDescription {
+	var bridges []BridgeDescription
+	for name, bridge := range b.bridges {
+		if bridge.MonitorIface == nil {
+			bridges = append(bridges, BridgeDescription{
+				Name:   name,
+				Iface1: int32(bridge.Iface1.Attrs().Index),
+				Iface2: int32(bridge.Iface2.Attrs().Index),
+			})
+		} else {
+			monitorIndex := int32(bridge.MonitorIface.Attrs().Index)
+			bridges = append(bridges, BridgeDescription{
+				Name:    name,
+				Iface1:  int32(bridge.Iface1.Attrs().Index),
+				Iface2:  int32(bridge.Iface2.Attrs().Index),
+				Monitor: &monitorIndex,
+			})
+		}
 	}
+	return bridges
 }
