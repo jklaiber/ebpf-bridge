@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 	"github.com/jklaiber/ebpf-bridge/pkg/service"
 	"github.com/spf13/cobra"
 )
@@ -15,7 +16,8 @@ var serviceCmd = &cobra.Command{
 	Short: "Start the ebpf-bridge managing service",
 	Run: func(cmd *cobra.Command, args []string) {
 		checkIsRoot()
-		service := service.NewEbpfBridgeService()
+		linkFactory := hostlink.NewHostLinkFactory()
+		service := service.NewEbpfBridgeService(linkFactory)
 		service.Start()
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)

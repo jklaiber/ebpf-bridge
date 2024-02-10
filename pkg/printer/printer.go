@@ -1,3 +1,4 @@
+//go:generate mockgen -source=printer.go -destination=mocks/printer_mock.go -package=mocks Printer
 package printer
 
 import (
