@@ -5,12 +5,12 @@ import (
 	"os"
 
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jklaiber/ebpf-bridge/pkg/api"
 	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
-	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
 )
 
 type Printer interface {
-	PrintBridgeDescriptions(bridges []*messaging.BridgeDescription) string
+	PrintBridgeDescriptions(bridges []*api.BridgeDescription) string
 }
 
 type PrettyPrinter struct {
@@ -23,7 +23,7 @@ func NewPrettyPrinter(linkFactory hostlink.LinkFactory) *PrettyPrinter {
 	}
 }
 
-func (p *PrettyPrinter) PrintBridgeDescriptions(bridges []*messaging.BridgeDescription) string {
+func (p *PrettyPrinter) PrintBridgeDescriptions(bridges []*api.BridgeDescription) string {
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name", "Iface1", "Iface2", "Monitor-Iface"})

@@ -12,7 +12,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	messaging "github.com/jklaiber/ebpf-bridge/pkg/messaging"
+	api "github.com/jklaiber/ebpf-bridge/pkg/api"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -40,10 +40,10 @@ func (m *MockClient) EXPECT() *MockClientMockRecorder {
 }
 
 // AddBridge mocks base method.
-func (m *MockClient) AddBridge(in *messaging.AddCommand) (*messaging.AddResponse, error) {
+func (m *MockClient) AddBridge(in *api.AddCommand) (*api.AddResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddBridge", in)
-	ret0, _ := ret[0].(*messaging.AddResponse)
+	ret0, _ := ret[0].(*api.AddResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -67,10 +67,10 @@ func (mr *MockClientMockRecorder) Close() *gomock.Call {
 }
 
 // ListBridges mocks base method.
-func (m *MockClient) ListBridges(in *messaging.ListCommand) (*messaging.ListResponse, error) {
+func (m *MockClient) ListBridges(in *api.ListCommand) (*api.ListResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListBridges", in)
-	ret0, _ := ret[0].(*messaging.ListResponse)
+	ret0, _ := ret[0].(*api.ListResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -82,10 +82,10 @@ func (mr *MockClientMockRecorder) ListBridges(in any) *gomock.Call {
 }
 
 // RemoveBridge mocks base method.
-func (m *MockClient) RemoveBridge(in *messaging.RemoveCommand) (*messaging.RemoveResponse, error) {
+func (m *MockClient) RemoveBridge(in *api.RemoveCommand) (*api.RemoveResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveBridge", in)
-	ret0, _ := ret[0].(*messaging.RemoveResponse)
+	ret0, _ := ret[0].(*api.RemoveResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

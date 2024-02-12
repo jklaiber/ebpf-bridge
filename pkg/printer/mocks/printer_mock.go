@@ -12,7 +12,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	messaging "github.com/jklaiber/ebpf-bridge/pkg/messaging"
+	api "github.com/jklaiber/ebpf-bridge/pkg/api"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -40,7 +40,7 @@ func (m *MockPrinter) EXPECT() *MockPrinterMockRecorder {
 }
 
 // PrintBridgeDescriptions mocks base method.
-func (m *MockPrinter) PrintBridgeDescriptions(bridges []*messaging.BridgeDescription) string {
+func (m *MockPrinter) PrintBridgeDescriptions(bridges []*api.BridgeDescription) string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PrintBridgeDescriptions", bridges)
 	ret0, _ := ret[0].(string)

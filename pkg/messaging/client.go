@@ -6,20 +6,21 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jklaiber/ebpf-bridge/pkg/api"
 	grpc "google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Client interface {
 	Close()
-	AddBridge(in *AddCommand) (*AddResponse, error)
-	RemoveBridge(in *RemoveCommand) (*RemoveResponse, error)
-	ListBridges(in *ListCommand) (*ListResponse, error)
+	AddBridge(in *api.AddCommand) (*api.AddResponse, error)
+	RemoveBridge(in *api.RemoveCommand) (*api.RemoveResponse, error)
+	ListBridges(in *api.ListCommand) (*api.ListResponse, error)
 }
 
 type MessagingClient struct {
 	conn    *grpc.ClientConn
-	client  EbpfBridgeControllerClient
+	client  api.EbpfBridgeControllerClient
 	timeout time.Duration
 }
 
@@ -29,7 +30,7 @@ func NewMessagingClient() *MessagingClient {
 		panic(err)
 	}
 
-	client := NewEbpfBridgeControllerClient(conn)
+	client := api.NewEbpfBridgeControllerClient(conn)
 
 	return &MessagingClient{
 		conn:    conn,
@@ -50,19 +51,19 @@ func (mc *MessagingClient) Close() {
 	}
 }
 
-func (mc *MessagingClient) AddBridge(in *AddCommand) (*AddResponse, error) {
+func (mc *MessagingClient) AddBridge(in *api.AddCommand) (*api.AddResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), mc.timeout)
 	defer cancel()
 	return mc.client.AddBridge(ctx, in)
 }
 
-func (mc *MessagingClient) RemoveBridge(in *RemoveCommand) (*RemoveResponse, error) {
+func (mc *MessagingClient) RemoveBridge(in *api.RemoveCommand) (*api.RemoveResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), mc.timeout)
 	defer cancel()
 	return mc.client.RemoveBridge(ctx, in)
 }
 
-func (mc *MessagingClient) ListBridges(in *ListCommand) (*ListResponse, error) {
+func (mc *MessagingClient) ListBridges(in *api.ListCommand) (*api.ListResponse, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), mc.timeout)
 	defer cancel()
 	return mc.client.ListBridges(ctx, in)

@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/jklaiber/ebpf-bridge/pkg/api"
 	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
 	"github.com/jklaiber/ebpf-bridge/pkg/printer"
@@ -21,7 +22,7 @@ func NewListCommand(linkFactory hostlink.LinkFactory, messagingClient messaging.
 }
 
 func (l *ListCommand) Execute() (string, error) {
-	returnMsg, err := l.messagingClient.ListBridges(&messaging.ListCommand{})
+	returnMsg, err := l.messagingClient.ListBridges(&api.ListCommand{})
 	if err != nil {
 		return "", err
 	}

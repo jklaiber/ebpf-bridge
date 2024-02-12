@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
+	"github.com/jklaiber/ebpf-bridge/pkg/api"
 	messagingMock "github.com/jklaiber/ebpf-bridge/pkg/messaging/mocks"
 	"go.uber.org/mock/gomock"
 )
@@ -37,7 +37,7 @@ func TestRemoveCommand_Execute(t *testing.T) {
 		{
 			name: "Test Execute with no error",
 			mockCall: func(ctrl *gomock.Controller, mockMessagingClient *messagingMock.MockClient) {
-				mockMessagingClient.EXPECT().RemoveBridge(gomock.Any()).Return(&messaging.RemoveResponse{}, nil).AnyTimes()
+				mockMessagingClient.EXPECT().RemoveBridge(gomock.Any()).Return(&api.RemoveResponse{}, nil).AnyTimes()
 			},
 			wantErr: false,
 		},

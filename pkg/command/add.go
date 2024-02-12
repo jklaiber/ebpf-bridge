@@ -1,6 +1,7 @@
 package command
 
 import (
+	"github.com/jklaiber/ebpf-bridge/pkg/api"
 	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
 )
@@ -38,7 +39,7 @@ func (a *AddCommand) Execute() (string, error) {
 		return "", err
 	}
 
-	msg := &messaging.AddCommand{
+	msg := &api.AddCommand{
 		Name: a.BridgeName,
 	}
 

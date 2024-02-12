@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/jklaiber/ebpf-bridge/pkg/api"
 	hostlinkMock "github.com/jklaiber/ebpf-bridge/pkg/hostlink/mocks"
-	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
 	messagingMock "github.com/jklaiber/ebpf-bridge/pkg/messaging/mocks"
 	"go.uber.org/mock/gomock"
 )
@@ -94,7 +94,7 @@ func TestAddCommand_Execute(t *testing.T) {
 				monitorIfaceMock := hostlinkMock.NewMockLink(ctrl)
 				monitorIfaceMock.EXPECT().Index().Return(3).AnyTimes()
 				mockLinkFactory.EXPECT().NewLinkWithName("monitorIface").Return(monitorIfaceMock, nil).AnyTimes()
-				mockMessagingClient.EXPECT().AddBridge(gomock.Any()).Return(&messaging.AddResponse{}, nil).AnyTimes()
+				mockMessagingClient.EXPECT().AddBridge(gomock.Any()).Return(&api.AddResponse{}, nil).AnyTimes()
 			},
 			addCall: func(mockLinkFactory *hostlinkMock.MockLinkFactory, mockMessagingClient *messagingMock.MockClient) *AddCommand {
 				return NewAddCommand(mockLinkFactory, mockMessagingClient, "test", "iface1", "iface2", "monitorIface")
@@ -110,7 +110,7 @@ func TestAddCommand_Execute(t *testing.T) {
 				iface2Mock := hostlinkMock.NewMockLink(ctrl)
 				iface2Mock.EXPECT().Index().Return(2).AnyTimes()
 				mockLinkFactory.EXPECT().NewLinkWithName("iface2").Return(iface2Mock, nil).AnyTimes()
-				mockMessagingClient.EXPECT().AddBridge(gomock.Any()).Return(&messaging.AddResponse{}, nil).AnyTimes()
+				mockMessagingClient.EXPECT().AddBridge(gomock.Any()).Return(&api.AddResponse{}, nil).AnyTimes()
 			},
 			addCall: func(mockLinkFactory *hostlinkMock.MockLinkFactory, mockMessagingClient *messagingMock.MockClient) *AddCommand {
 				return NewAddCommand(mockLinkFactory, mockMessagingClient, "test", "iface1", "iface2", "")
