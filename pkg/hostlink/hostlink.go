@@ -3,6 +3,21 @@ package hostlink
 
 import "github.com/vishvananda/netlink"
 
+type NetlinkWrapper interface {
+	LinkByIndex(index int) (netlink.Link, error)
+	LinkByName(name string) (netlink.Link, error)
+}
+
+type DefaultNetlinkWrapper struct{}
+
+func (d *DefaultNetlinkWrapper) LinkByIndex(index int) (netlink.Link, error) {
+	return netlink.LinkByIndex(index)
+}
+
+func (d *DefaultNetlinkWrapper) LinkByName(name string) (netlink.Link, error) {
+	return netlink.LinkByName(name)
+}
+
 type Link interface {
 	Index() int
 	Name() string
@@ -19,13 +34,17 @@ type HostLink struct {
 }
 
 func NewHostLinkFactory() LinkFactory {
-	return &hostLinkFactory{}
+	return &hostLinkFactory{
+		nlw: &DefaultNetlinkWrapper{},
+	}
 }
 
-type hostLinkFactory struct{}
+type hostLinkFactory struct {
+	nlw NetlinkWrapper
+}
 
 func (f *hostLinkFactory) NewLinkWithIndex(index int) (Link, error) {
-	link, err := netlink.LinkByIndex(index)
+	link, err := f.nlw.LinkByIndex(index)
 	if err != nil {
 		return nil, err
 	}
@@ -36,7 +55,7 @@ func (f *hostLinkFactory) NewLinkWithIndex(index int) (Link, error) {
 }
 
 func (f *hostLinkFactory) NewLinkWithName(name string) (Link, error) {
-	link, err := netlink.LinkByName(name)
+	link, err := f.nlw.LinkByName(name)
 	if err != nil {
 		return nil, err
 	}

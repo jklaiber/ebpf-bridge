@@ -1,3 +1,4 @@
+//go:generate mockgen -source=linker.go -destination=mocks/linker_mock.go -package=mocks Linker
 package linker
 
 import (

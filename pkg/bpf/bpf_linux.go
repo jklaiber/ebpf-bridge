@@ -10,6 +10,10 @@ import (
 
 type BpfLinux struct{}
 
+func NewBpfLinux() *BpfLinux {
+	return &BpfLinux{}
+}
+
 func (b *BpfLinux) ReadBpfObjects() (*bpfObjects, error) {
 	obj := &bpfObjects{}
 	ops := &ebpf.CollectionOptions{

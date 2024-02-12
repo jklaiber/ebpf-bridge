@@ -5,15 +5,23 @@ import (
 	"os"
 
 	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
-	"github.com/vishvananda/netlink"
 )
 
 type Printer interface {
 	PrintBridgeDescriptions(bridges []*messaging.BridgeDescription) string
 }
 
-type PrettyPrinter struct{}
+type PrettyPrinter struct {
+	linkFactory hostlink.LinkFactory
+}
+
+func NewPrettyPrinter(linkFactory hostlink.LinkFactory) *PrettyPrinter {
+	return &PrettyPrinter{
+		linkFactory: linkFactory,
+	}
+}
 
 func (p *PrettyPrinter) PrintBridgeDescriptions(bridges []*messaging.BridgeDescription) string {
 	t := table.NewWriter()
@@ -21,20 +29,15 @@ func (p *PrettyPrinter) PrintBridgeDescriptions(bridges []*messaging.BridgeDescr
 	t.AppendHeader(table.Row{"Name", "Iface1", "Iface2", "Monitor-Iface"})
 
 	for _, bridge := range bridges {
+		iface1, _ := p.linkFactory.NewLinkWithIndex(int(bridge.Iface1))
+		iface2, _ := p.linkFactory.NewLinkWithIndex(int(bridge.Iface2))
 		if bridge.Monitor == nil {
-			t.AppendRow([]interface{}{bridge.Name, GetIfaceNameForIndex(bridge.Iface1), GetIfaceNameForIndex(bridge.Iface2), ""})
+			t.AppendRow([]interface{}{bridge.Name, iface1.Name(), iface2.Name(), ""})
 		} else {
-			t.AppendRow([]interface{}{bridge.Name, GetIfaceNameForIndex(bridge.Iface1), GetIfaceNameForIndex(bridge.Iface2), GetIfaceNameForIndex(*bridge.Monitor)})
+			monitorIface, _ := p.linkFactory.NewLinkWithIndex(int(*bridge.Monitor))
+			t.AppendRow([]interface{}{bridge.Name, iface1.Name(), iface2.Name(), monitorIface.Name()})
 		}
 		t.AppendSeparator()
 	}
 	return t.Render()
-}
-
-func GetIfaceNameForIndex(index int32) string {
-	iface, err := netlink.LinkByIndex(int(index))
-	if err != nil {
-		return ""
-	}
-	return iface.Attrs().Name
 }

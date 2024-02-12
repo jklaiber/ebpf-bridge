@@ -21,6 +21,31 @@ type Bridge interface {
 	MonitorInterface() hostlink.Link
 }
 
+type BridgeFactory interface {
+	NewBridge(name string, iface1 hostlink.Link, iface2 hostlink.Link, monitorIface hostlink.Link) Bridge
+}
+
+type EbpfBridgeFactory struct {
+	bpf bpf.Bpf
+}
+
+func NewEbpfBridgeFactory(bpf bpf.Bpf) *EbpfBridgeFactory {
+	return &EbpfBridgeFactory{
+		bpf: bpf,
+	}
+}
+
+func (f *EbpfBridgeFactory) NewBridge(name string, iface1 hostlink.Link, iface2 hostlink.Link, monitorIface hostlink.Link) Bridge {
+	return &EbpfBridge{
+		bpf:          f.bpf,
+		name:         name,
+		iface1:       iface1,
+		iface2:       iface2,
+		monitorIface: monitorIface,
+		mapUuid:      uuid.New().String(),
+	}
+}
+
 type EbpfBridge struct {
 	bpf          bpf.Bpf
 	name         string
@@ -30,17 +55,6 @@ type EbpfBridge struct {
 	iface1Linker linker.Linker
 	iface2Linker linker.Linker
 	mapUuid      string
-}
-
-func NewEbpfBridge(name string, iface1 hostlink.Link, iface2 hostlink.Link, monitorIface hostlink.Link) *EbpfBridge {
-	return &EbpfBridge{
-		bpf:          &bpf.BpfLinux{},
-		name:         name,
-		iface1:       iface1,
-		iface2:       iface2,
-		monitorIface: monitorIface,
-		mapUuid:      uuid.New().String(),
-	}
 }
 
 func (e *EbpfBridge) Name() string {

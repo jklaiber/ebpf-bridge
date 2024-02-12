@@ -1,3 +1,4 @@
+//go:generate mockgen -source=client.go -destination=mocks/messaging_mock.go -package=mocks Client
 package messaging
 
 import (

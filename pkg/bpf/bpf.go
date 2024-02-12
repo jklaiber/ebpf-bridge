@@ -1,3 +1,4 @@
+//go:generate mockgen -source=bpf.go -destination=bpf_mock.go -package=bpf Bpf
 package bpf
 
 import (

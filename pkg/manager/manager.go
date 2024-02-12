@@ -1,9 +1,11 @@
 //go:generate mockgen -source=manager.go -destination=mocks/manager_mock.go -package=mocks Manager
-package bridge
+package manager
 
 import (
 	"fmt"
 
+	"github.com/jklaiber/ebpf-bridge/pkg/bpf"
+	"github.com/jklaiber/ebpf-bridge/pkg/bridge"
 	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 )
 
@@ -14,14 +16,17 @@ type Manager interface {
 }
 
 type BridgeManager struct {
-	bridges     map[string]Bridge
-	linkFactory hostlink.LinkFactory
+	bridges       map[string]bridge.Bridge
+	bpf           bpf.Bpf
+	linkFactory   hostlink.LinkFactory
+	bridgeFactory bridge.BridgeFactory
 }
 
-func NewBridgeManager(linkFactory hostlink.LinkFactory) *BridgeManager {
+func NewBridgeManager(linkFactory hostlink.LinkFactory, bridgeFactory bridge.BridgeFactory) *BridgeManager {
 	return &BridgeManager{
-		bridges:     make(map[string]Bridge),
-		linkFactory: linkFactory,
+		bridges:       make(map[string]bridge.Bridge),
+		linkFactory:   linkFactory,
+		bridgeFactory: bridgeFactory,
 	}
 }
 
@@ -39,14 +44,14 @@ func (b *BridgeManager) Add(name string, iface1 int, iface2 int, monitorIface *i
 		if err != nil {
 			return fmt.Errorf("failed to get monitorIface: %w", err)
 		}
-		ebpfBridge := NewEbpfBridge(name, niface1, niface2, nmonitorIface)
+		ebpfBridge := b.bridgeFactory.NewBridge(name, niface1, niface2, nmonitorIface)
 		err = ebpfBridge.Add()
 		if err != nil {
 			return err
 		}
 		b.bridges[name] = ebpfBridge
 	} else {
-		ebpfBridge := NewEbpfBridge(name, niface1, niface2, nil)
+		ebpfBridge := b.bridgeFactory.NewBridge(name, niface1, niface2, nil)
 		err = ebpfBridge.Add()
 		if err != nil {
 			return err

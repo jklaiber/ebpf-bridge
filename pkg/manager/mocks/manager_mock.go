@@ -12,7 +12,7 @@ package mocks
 import (
 	reflect "reflect"
 
-	bridge "github.com/jklaiber/ebpf-bridge/pkg/bridge"
+	manager "github.com/jklaiber/ebpf-bridge/pkg/manager"
 	gomock "go.uber.org/mock/gomock"
 )
 
@@ -54,10 +54,10 @@ func (mr *MockManagerMockRecorder) Add(name, iface1, iface2, monitorIface any) *
 }
 
 // List mocks base method.
-func (m *MockManager) List() []bridge.BridgeDescription {
+func (m *MockManager) List() []manager.BridgeDescription {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List")
-	ret0, _ := ret[0].([]bridge.BridgeDescription)
+	ret0, _ := ret[0].([]manager.BridgeDescription)
 	return ret0
 }
 

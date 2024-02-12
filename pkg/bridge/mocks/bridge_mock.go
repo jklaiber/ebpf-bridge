@@ -12,6 +12,7 @@ package mocks
 import (
 	reflect "reflect"
 
+	bridge "github.com/jklaiber/ebpf-bridge/pkg/bridge"
 	hostlink "github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 	gomock "go.uber.org/mock/gomock"
 )
@@ -121,4 +122,41 @@ func (m *MockBridge) Remove() error {
 func (mr *MockBridgeMockRecorder) Remove() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockBridge)(nil).Remove))
+}
+
+// MockBridgeFactory is a mock of BridgeFactory interface.
+type MockBridgeFactory struct {
+	ctrl     *gomock.Controller
+	recorder *MockBridgeFactoryMockRecorder
+}
+
+// MockBridgeFactoryMockRecorder is the mock recorder for MockBridgeFactory.
+type MockBridgeFactoryMockRecorder struct {
+	mock *MockBridgeFactory
+}
+
+// NewMockBridgeFactory creates a new mock instance.
+func NewMockBridgeFactory(ctrl *gomock.Controller) *MockBridgeFactory {
+	mock := &MockBridgeFactory{ctrl: ctrl}
+	mock.recorder = &MockBridgeFactoryMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MockBridgeFactory) EXPECT() *MockBridgeFactoryMockRecorder {
+	return m.recorder
+}
+
+// NewBridge mocks base method.
+func (m *MockBridgeFactory) NewBridge(name string, iface1, iface2, monitorIface hostlink.Link) bridge.Bridge {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "NewBridge", name, iface1, iface2, monitorIface)
+	ret0, _ := ret[0].(bridge.Bridge)
+	return ret0
+}
+
+// NewBridge indicates an expected call of NewBridge.
+func (mr *MockBridgeFactoryMockRecorder) NewBridge(name, iface1, iface2, monitorIface any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NewBridge", reflect.TypeOf((*MockBridgeFactory)(nil).NewBridge), name, iface1, iface2, monitorIface)
 }
