@@ -27,11 +27,10 @@ var serviceCmd = &cobra.Command{
 		service.Start()
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
-		select {
-		case <-sigChan:
-			fmt.Println("Received signal, exiting")
-			service.Stop()
-		}
+
+		<-sigChan
+		fmt.Println("Received signal, exiting")
+		service.Stop()
 	},
 }
 

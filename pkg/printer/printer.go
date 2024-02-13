@@ -2,6 +2,7 @@
 package printer
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/jedib0t/go-pretty/v6/table"
@@ -27,6 +28,11 @@ func (p *PrettyPrinter) PrintBridgeDescriptions(bridges []*api.BridgeDescription
 	t := table.NewWriter()
 	t.SetOutputMirror(os.Stdout)
 	t.AppendHeader(table.Row{"Name", "Iface1", "Iface2", "Monitor-Iface"})
+
+	if len(bridges) == 0 {
+		fmt.Println("No bridges found")
+		return "No bridges found"
+	}
 
 	for _, bridge := range bridges {
 		iface1, _ := p.linkFactory.NewLinkWithIndex(int(bridge.Iface1))

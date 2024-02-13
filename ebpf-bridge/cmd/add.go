@@ -34,11 +34,17 @@ var addCmd = &cobra.Command{
 
 func init() {
 	addCmd.Flags().StringVar(&bridgeName, "name", "", "Name of the bridge")
-	addCmd.MarkFlagRequired("name")
+	if err := addCmd.MarkFlagRequired("name"); err != nil {
+		log.Fatalf("Failed to mark flag as required: %v", err)
+	}
 	addCmd.Flags().StringVar(&iface1, "iface1", "", "First interface to connect")
-	addCmd.MarkFlagRequired("iface1")
+	if err := addCmd.MarkFlagRequired("iface1"); err != nil {
+		log.Fatalf("Failed to mark flag as required: %v", err)
+	}
 	addCmd.Flags().StringVar(&iface2, "iface2", "", "Second interface to connect")
-	addCmd.MarkFlagRequired("iface2")
+	if err := addCmd.MarkFlagRequired("iface2"); err != nil {
+		log.Fatalf("Failed to mark flag as required: %v", err)
+	}
 	addCmd.Flags().StringVar(&monitorIface, "monitor", "", "Monitoring interface")
 	rootCmd.AddCommand(addCmd)
 }

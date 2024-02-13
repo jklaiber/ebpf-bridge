@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -33,7 +34,7 @@ func TestMessagingServer_AddBridge(t *testing.T) {
 				m.EXPECT().Add(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("error"))
 			},
 			testCall: func(s *MessagingServer) (*api.AddResponse, error) {
-				return s.AddBridge(nil, &api.AddCommand{
+				return s.AddBridge(context.Background(), &api.AddCommand{
 					Name:   "test",
 					Iface1: 1,
 					Iface2: 2,
@@ -47,7 +48,7 @@ func TestMessagingServer_AddBridge(t *testing.T) {
 				m.EXPECT().Add(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			testCall: func(s *MessagingServer) (*api.AddResponse, error) {
-				return s.AddBridge(nil, &api.AddCommand{
+				return s.AddBridge(context.Background(), &api.AddCommand{
 					Name:   "test",
 					Iface1: 1,
 					Iface2: 2,
@@ -61,7 +62,7 @@ func TestMessagingServer_AddBridge(t *testing.T) {
 				m.EXPECT().Add(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("error"))
 			},
 			testCall: func(s *MessagingServer) (*api.AddResponse, error) {
-				return s.AddBridge(nil, &api.AddCommand{
+				return s.AddBridge(context.Background(), &api.AddCommand{
 					Name:    "test",
 					Iface1:  1,
 					Iface2:  2,
@@ -76,7 +77,7 @@ func TestMessagingServer_AddBridge(t *testing.T) {
 				m.EXPECT().Add(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
 			},
 			testCall: func(s *MessagingServer) (*api.AddResponse, error) {
-				return s.AddBridge(nil, &api.AddCommand{
+				return s.AddBridge(context.Background(), &api.AddCommand{
 					Name:    "test",
 					Iface1:  1,
 					Iface2:  2,
@@ -122,7 +123,7 @@ func TestMessagingServer_RemoveBridge(t *testing.T) {
 				m.EXPECT().Remove(gomock.Any()).Return(fmt.Errorf("error"))
 			},
 			testCall: func(s *MessagingServer) (*api.RemoveResponse, error) {
-				return s.RemoveBridge(nil, &api.RemoveCommand{
+				return s.RemoveBridge(context.Background(), &api.RemoveCommand{
 					Name: "test",
 				})
 			},
@@ -134,7 +135,7 @@ func TestMessagingServer_RemoveBridge(t *testing.T) {
 				m.EXPECT().Remove(gomock.Any()).Return(nil)
 			},
 			testCall: func(s *MessagingServer) (*api.RemoveResponse, error) {
-				return s.RemoveBridge(nil, &api.RemoveCommand{
+				return s.RemoveBridge(context.Background(), &api.RemoveCommand{
 					Name: "test",
 				})
 			},
@@ -176,7 +177,7 @@ func TestMessagingServer_ListBridges(t *testing.T) {
 
 	bridgeManager.EXPECT().List().Return(nil)
 
-	_, err := server.ListBridges(nil, &api.ListCommand{})
+	_, err := server.ListBridges(context.Background(), &api.ListCommand{})
 	if err != nil {
 		t.Errorf("ListBridges() error = %v", err)
 	}

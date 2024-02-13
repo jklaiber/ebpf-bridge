@@ -4,7 +4,6 @@ package manager
 import (
 	"fmt"
 
-	"github.com/jklaiber/ebpf-bridge/pkg/bpf"
 	"github.com/jklaiber/ebpf-bridge/pkg/bridge"
 	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 )
@@ -17,7 +16,6 @@ type Manager interface {
 
 type BridgeManager struct {
 	bridges       map[string]bridge.Bridge
-	bpf           bpf.Bpf
 	linkFactory   hostlink.LinkFactory
 	bridgeFactory bridge.BridgeFactory
 }

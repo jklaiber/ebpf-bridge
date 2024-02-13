@@ -33,15 +33,12 @@ func NewEbpfBridgeService(bridgeManager manager.Manager) *EbpfBridgeService {
 func (s *EbpfBridgeService) Start() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	go func() {
-		select {
-		case <-s.ctx.Done():
-			log.Info("Shutting down")
-			s.messagingServer.Stop()
-		default:
-			log.Info("Starting service")
-			s.messagingServer.Start()
-		}
+		<-s.ctx.Done()
+		log.Info("Shutting down")
+		s.messagingServer.Stop()
 	}()
+	log.Info("Starting service")
+	s.messagingServer.Start()
 }
 
 func (s *EbpfBridgeService) Stop() {

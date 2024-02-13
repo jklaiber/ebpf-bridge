@@ -26,6 +26,8 @@ var removeCmd = &cobra.Command{
 
 func init() {
 	removeCmd.Flags().StringVarP(&bridgeName, "name", "n", "", "Name of the bridge to remove")
-	removeCmd.MarkFlagRequired("name")
+	if err := removeCmd.MarkFlagRequired("name"); err != nil {
+		log.Fatalf("Failed to mark flag as required: %v", err)
+	}
 	rootCmd.AddCommand(removeCmd)
 }
