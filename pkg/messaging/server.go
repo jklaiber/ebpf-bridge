@@ -7,8 +7,6 @@ import (
 	"os"
 
 	"github.com/jklaiber/ebpf-bridge/pkg/api"
-	"github.com/jklaiber/ebpf-bridge/pkg/bridge"
-	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 	"github.com/jklaiber/ebpf-bridge/pkg/logging"
 	"github.com/jklaiber/ebpf-bridge/pkg/manager"
 	grpc "google.golang.org/grpc"
@@ -30,10 +28,10 @@ type MessagingServer struct {
 	bridgeManager manager.Manager
 }
 
-func NewMessagingServer(linkFactory hostlink.LinkFactory, bridgeFactory bridge.BridgeFactory) *MessagingServer {
+func NewMessagingServer(manager manager.Manager) *MessagingServer {
 	return &MessagingServer{
 		server:        grpc.NewServer(),
-		bridgeManager: manager.NewBridgeManager(linkFactory, bridgeFactory),
+		bridgeManager: manager,
 	}
 }
 

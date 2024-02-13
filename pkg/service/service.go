@@ -3,9 +3,8 @@ package service
 import (
 	"context"
 
-	"github.com/jklaiber/ebpf-bridge/pkg/bridge"
-	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 	"github.com/jklaiber/ebpf-bridge/pkg/logging"
+	"github.com/jklaiber/ebpf-bridge/pkg/manager"
 	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
 )
 
@@ -24,8 +23,8 @@ type EbpfBridgeService struct {
 	cancel          context.CancelFunc
 }
 
-func NewEbpfBridgeService(linkFactory hostlink.LinkFactory, bridgeFactory bridge.BridgeFactory) *EbpfBridgeService {
-	messagingServer := messaging.NewMessagingServer(linkFactory, bridgeFactory)
+func NewEbpfBridgeService(bridgeManager manager.Manager) *EbpfBridgeService {
+	messagingServer := messaging.NewMessagingServer(bridgeManager)
 	return &EbpfBridgeService{
 		messagingServer: messagingServer,
 	}

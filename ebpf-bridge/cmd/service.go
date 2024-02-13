@@ -9,6 +9,7 @@ import (
 	"github.com/jklaiber/ebpf-bridge/pkg/bpf"
 	"github.com/jklaiber/ebpf-bridge/pkg/bridge"
 	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
+	"github.com/jklaiber/ebpf-bridge/pkg/manager"
 	"github.com/jklaiber/ebpf-bridge/pkg/service"
 	"github.com/spf13/cobra"
 )
@@ -21,7 +22,8 @@ var serviceCmd = &cobra.Command{
 		bpf := bpf.NewBpfLinux()
 		linkFactory := hostlink.NewHostLinkFactory()
 		bridgeFactory := bridge.NewEbpfBridgeFactory(bpf)
-		service := service.NewEbpfBridgeService(linkFactory, bridgeFactory)
+		bridgeManager := manager.NewBridgeManager(linkFactory, bridgeFactory)
+		service := service.NewEbpfBridgeService(bridgeManager)
 		service.Start()
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
