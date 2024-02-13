@@ -6,8 +6,9 @@ import (
 	"net"
 	"os"
 
-	"github.com/jklaiber/ebpf-bridge/pkg/bridge"
+	"github.com/jklaiber/ebpf-bridge/pkg/api"
 	"github.com/jklaiber/ebpf-bridge/pkg/logging"
+	"github.com/jklaiber/ebpf-bridge/pkg/manager"
 	grpc "google.golang.org/grpc"
 )
 
@@ -16,25 +17,25 @@ var log = logging.DefaultLogger.WithField("subsystem", "messaging-server")
 type Server interface {
 	Start()
 	Stop()
-	AddBridge(ctx context.Context, in *AddCommand) (*AddResponse, error)
-	RemoveBridge(ctx context.Context, in *RemoveCommand) (*RemoveResponse, error)
-	ListBridges(ctx context.Context, in *ListCommand) (*ListResponse, error)
+	AddBridge(ctx context.Context, in *api.AddCommand) (*api.AddResponse, error)
+	RemoveBridge(ctx context.Context, in *api.RemoveCommand) (*api.RemoveResponse, error)
+	ListBridges(ctx context.Context, in *api.ListCommand) (*api.ListResponse, error)
 }
 
 type MessagingServer struct {
-	UnimplementedEbpfBridgeControllerServer
+	api.UnimplementedEbpfBridgeControllerServer
 	server        *grpc.Server
-	bridgeManager bridge.Manager
+	bridgeManager manager.Manager
 }
 
-func NewMessagingServer() *MessagingServer {
+func NewMessagingServer(manager manager.Manager) *MessagingServer {
 	return &MessagingServer{
 		server:        grpc.NewServer(),
-		bridgeManager: bridge.NewBridgeManager(),
+		bridgeManager: manager,
 	}
 }
 
-func (s *MessagingServer) AddBridge(ctx context.Context, in *AddCommand) (*AddResponse, error) {
+func (s *MessagingServer) AddBridge(ctx context.Context, in *api.AddCommand) (*api.AddResponse, error) {
 	log.Infof("Add command received: %v", in)
 	if in.Monitor != nil {
 		log.Info("Monitor is not nil")
@@ -42,7 +43,7 @@ func (s *MessagingServer) AddBridge(ctx context.Context, in *AddCommand) (*AddRe
 		err := s.bridgeManager.Add(in.Name, int(in.Iface1), int(in.Iface2), &monitorValue)
 		if err != nil {
 			log.Errorf("Failed to add bridge: %v", err)
-			return &AddResponse{
+			return &api.AddResponse{
 				Success: false,
 				Message: fmt.Sprintf("failed to add bridge: %v", err),
 			}, nil
@@ -51,53 +52,53 @@ func (s *MessagingServer) AddBridge(ctx context.Context, in *AddCommand) (*AddRe
 		err := s.bridgeManager.Add(in.Name, int(in.Iface1), int(in.Iface2), nil)
 		if err != nil {
 			log.Errorf("Failed to add bridge: %v", err)
-			return &AddResponse{
+			return &api.AddResponse{
 				Success: false,
 				Message: fmt.Sprintf("failed to add bridge: %v", err),
 			}, nil
 		}
 	}
-	return &AddResponse{
+	return &api.AddResponse{
 		Success: true,
 		Message: fmt.Sprintf("Bridge %s added", in.Name),
 	}, nil
 }
 
-func (s *MessagingServer) RemoveBridge(ctx context.Context, in *RemoveCommand) (*RemoveResponse, error) {
+func (s *MessagingServer) RemoveBridge(ctx context.Context, in *api.RemoveCommand) (*api.RemoveResponse, error) {
 	log.Infof("Remove command received: %v", in)
 	err := s.bridgeManager.Remove(in.Name)
 	if err != nil {
 		log.Errorf("Failed to remove bridge: %v", err)
-		return &RemoveResponse{
+		return &api.RemoveResponse{
 			Success: false,
 			Message: fmt.Sprintf("failed to remove bridge: %v", err),
 		}, nil
 	}
-	return &RemoveResponse{
+	return &api.RemoveResponse{
 		Success: true,
 		Message: fmt.Sprintf("Bridge %s removed", in.Name),
 	}, nil
 }
 
-func (s *MessagingServer) ListBridges(ctx context.Context, in *ListCommand) (*ListResponse, error) {
+func (s *MessagingServer) ListBridges(ctx context.Context, in *api.ListCommand) (*api.ListResponse, error) {
 	log.Println("List command received")
 	bridges := s.bridgeManager.List()
-	var bridgeDescriptions []*BridgeDescription
+	var bridgeDescriptions []*api.BridgeDescription
 	for _, bridge := range bridges {
-		bridgeDescriptions = append(bridgeDescriptions, &BridgeDescription{
+		bridgeDescriptions = append(bridgeDescriptions, &api.BridgeDescription{
 			Name:    bridge.Name,
 			Iface1:  bridge.Iface1,
 			Iface2:  bridge.Iface2,
 			Monitor: bridge.Monitor,
 		})
 	}
-	return &ListResponse{Bridges: bridgeDescriptions}, nil
+	return &api.ListResponse{Bridges: bridgeDescriptions}, nil
 }
 
 func (s *MessagingServer) Start() {
 	os.Remove(SOCKET)
 
-	RegisterEbpfBridgeControllerServer(s.server, s)
+	api.RegisterEbpfBridgeControllerServer(s.server, s)
 	lis, err := net.Listen(PROTOCOL, SOCKET)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)

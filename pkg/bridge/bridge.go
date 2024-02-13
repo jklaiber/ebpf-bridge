@@ -1,3 +1,4 @@
+//go:generate mockgen -source=bridge.go -destination=mocks/bridge_mock.go -package=mocks Bridge
 package bridge
 
 import (
@@ -5,37 +6,71 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jklaiber/ebpf-bridge/pkg/bpf"
+	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 	"github.com/jklaiber/ebpf-bridge/pkg/linker"
-	"github.com/vishvananda/netlink"
 )
 
 const PinPath = "/sys/fs/bpf/devmap_"
 
 type Bridge interface {
-	Add(name string, iface1 netlink.Link, iface2 netlink.Link, monitorIface netlink.Link) error
-	Remove(name string) error
+	Add() error
+	Remove() error
+	Name() string
+	Interface1() hostlink.Link
+	Interface2() hostlink.Link
+	MonitorInterface() hostlink.Link
+}
+
+type BridgeFactory interface {
+	NewBridge(name string, iface1 hostlink.Link, iface2 hostlink.Link, monitorIface hostlink.Link) Bridge
+}
+
+type EbpfBridgeFactory struct {
+	bpf bpf.Bpf
+}
+
+func NewEbpfBridgeFactory(bpf bpf.Bpf) *EbpfBridgeFactory {
+	return &EbpfBridgeFactory{
+		bpf: bpf,
+	}
+}
+
+func (f *EbpfBridgeFactory) NewBridge(name string, iface1 hostlink.Link, iface2 hostlink.Link, monitorIface hostlink.Link) Bridge {
+	return &EbpfBridge{
+		bpf:          f.bpf,
+		name:         name,
+		iface1:       iface1,
+		iface2:       iface2,
+		monitorIface: monitorIface,
+		mapUuid:      uuid.New().String(),
+	}
 }
 
 type EbpfBridge struct {
 	bpf          bpf.Bpf
-	Name         string
-	Iface1       netlink.Link
-	Iface2       netlink.Link
-	MonitorIface netlink.Link
-	Iface1Linker linker.Linker
-	Iface2Linker linker.Linker
+	name         string
+	iface1       hostlink.Link
+	iface2       hostlink.Link
+	monitorIface hostlink.Link
+	iface1Linker linker.Linker
+	iface2Linker linker.Linker
 	mapUuid      string
 }
 
-func NewEbpfBridge(name string, iface1 netlink.Link, iface2 netlink.Link, monitorIface netlink.Link) *EbpfBridge {
-	return &EbpfBridge{
-		bpf:          &bpf.BpfLinux{},
-		Name:         name,
-		Iface1:       iface1,
-		Iface2:       iface2,
-		MonitorIface: monitorIface,
-		mapUuid:      uuid.New().String(),
-	}
+func (e *EbpfBridge) Name() string {
+	return e.name
+}
+
+func (e *EbpfBridge) Interface1() hostlink.Link {
+	return e.iface1
+}
+
+func (e *EbpfBridge) Interface2() hostlink.Link {
+	return e.iface2
+}
+
+func (e *EbpfBridge) MonitorInterface() hostlink.Link {
+	return e.monitorIface
 }
 
 func (e *EbpfBridge) Add() error {
@@ -43,24 +78,24 @@ func (e *EbpfBridge) Add() error {
 	if err != nil {
 		return fmt.Errorf("failed to read bpf objects: %w", err)
 	}
-	linkerIface1 := linker.NewXdpLinker(e.Iface1, bpfObjects.XdpBridge)
-	e.Iface1Linker = linkerIface1
-	linkerIface2 := linker.NewXdpLinker(e.Iface2, bpfObjects.XdpBridge)
-	e.Iface2Linker = linkerIface2
+	linkerIface1 := linker.NewXdpLinker(e.iface1, bpfObjects.XdpBridge)
+	e.iface1Linker = linkerIface1
+	linkerIface2 := linker.NewXdpLinker(e.iface2, bpfObjects.XdpBridge)
+	e.iface2Linker = linkerIface2
 
 	err = bpfObjects.Devmap.Pin(PinPath + e.mapUuid)
 	if err != nil {
 		return fmt.Errorf("failed to pin devmap: %w", err)
 	}
 
-	if err := bpfObjects.Devmap.Put(uint32(0), uint32(e.Iface1.Attrs().Index)); err != nil {
+	if err := bpfObjects.Devmap.Put(uint32(0), uint32(e.iface1.Index())); err != nil {
 		return fmt.Errorf("failed to put iface1 into devmap: %w", err)
 	}
-	if err := bpfObjects.Devmap.Put(uint32(1), uint32(e.Iface2.Attrs().Index)); err != nil {
+	if err := bpfObjects.Devmap.Put(uint32(1), uint32(e.iface2.Index())); err != nil {
 		return fmt.Errorf("failed to put iface2 into devmap: %w", err)
 	}
-	if e.MonitorIface != nil {
-		if err := bpfObjects.Devmap.Put(uint32(2), uint32(e.MonitorIface.Attrs().Index)); err != nil {
+	if e.monitorIface != nil {
+		if err := bpfObjects.Devmap.Put(uint32(2), uint32(e.monitorIface.Index())); err != nil {
 			return fmt.Errorf("failed to put monitorIface into devmap: %w", err)
 		}
 	}
@@ -77,11 +112,11 @@ func (e *EbpfBridge) Add() error {
 }
 
 func (e *EbpfBridge) Remove() error {
-	err := e.Iface1Linker.Detach()
+	err := e.iface1Linker.Detach()
 	if err != nil {
 		return fmt.Errorf("failed to detach iface1: %w", err)
 	}
-	err = e.Iface2Linker.Detach()
+	err = e.iface2Linker.Detach()
 	if err != nil {
 		return fmt.Errorf("failed to detach iface2: %w", err)
 	}

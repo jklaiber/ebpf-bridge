@@ -1,6 +1,9 @@
 package command
 
-import "github.com/jklaiber/ebpf-bridge/pkg/messaging"
+import (
+	"github.com/jklaiber/ebpf-bridge/pkg/api"
+	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
+)
 
 type RemoveCommand struct {
 	Command
@@ -17,7 +20,7 @@ func NewRemoveCommand(messagingClient messaging.Client, name string) *RemoveComm
 }
 
 func (r *RemoveCommand) Execute() (string, error) {
-	msg := &messaging.RemoveCommand{
+	msg := &api.RemoveCommand{
 		Name: r.Name,
 	}
 	returnMsg, err := r.messagingClient.RemoveBridge(msg)

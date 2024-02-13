@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/jklaiber/ebpf-bridge/pkg/logging"
+	"github.com/jklaiber/ebpf-bridge/pkg/manager"
 	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
 )
 
@@ -22,8 +23,8 @@ type EbpfBridgeService struct {
 	cancel          context.CancelFunc
 }
 
-func NewEbpfBridgeService() *EbpfBridgeService {
-	messagingServer := messaging.NewMessagingServer()
+func NewEbpfBridgeService(bridgeManager manager.Manager) *EbpfBridgeService {
+	messagingServer := messaging.NewMessagingServer(bridgeManager)
 	return &EbpfBridgeService{
 		messagingServer: messagingServer,
 	}
@@ -32,15 +33,12 @@ func NewEbpfBridgeService() *EbpfBridgeService {
 func (s *EbpfBridgeService) Start() {
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	go func() {
-		select {
-		case <-s.ctx.Done():
-			log.Info("Shutting down")
-			s.messagingServer.Stop()
-		default:
-			log.Info("Starting service")
-			s.messagingServer.Start()
-		}
+		<-s.ctx.Done()
+		log.Info("Shutting down")
+		s.messagingServer.Stop()
 	}()
+	log.Info("Starting service")
+	s.messagingServer.Start()
 }
 
 func (s *EbpfBridgeService) Stop() {

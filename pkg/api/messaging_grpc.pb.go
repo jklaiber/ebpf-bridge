@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.2.0
 // - protoc             v3.12.4
-// source: pkg/messaging/messaging.proto
+// source: pkg/api/messaging.proto
 
-package messaging
+package api
 
 import (
 	context "context"
@@ -173,5 +173,5 @@ var EbpfBridgeController_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "pkg/messaging/messaging.proto",
+	Metadata: "pkg/api/messaging.proto",
 }
