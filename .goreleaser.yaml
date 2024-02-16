@@ -28,8 +28,6 @@ nfpms:
     license: Apache 2.0
     formats:
       - deb
-      - rpm
-      - apk
     scripts:
       postinstall: ./build/package/after-install.sh
       preremove: ./build/package/before-remove.sh
