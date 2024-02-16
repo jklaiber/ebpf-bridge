@@ -15,9 +15,11 @@ builds:
       - amd64
 
 dockers:
-  - image_templates:
-      - jklaiber/ebpf-bridge
+  - use: buildx
     dockerfile: ./build/package/Dockerfile
+    image_templates:
+      - "ghcr.io/jklaiber/ebpf-bridge:latest"
+      - "ghcr.io/jklaiber/ebpf-bridge:{{ .Tag }}"
 
 nfpms:
   - maintainer: Julian Klaiber <oss@klaibernet.ch>
