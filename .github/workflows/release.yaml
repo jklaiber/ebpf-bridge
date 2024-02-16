@@ -27,7 +27,7 @@ jobs:
         run: go mod tidy
 
       - name: Log into Registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
