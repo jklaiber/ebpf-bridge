@@ -6,8 +6,9 @@ on:
       - v[0-9]+.*
 
 permissions:
+  contents: write
   packages: write
-  
+
 jobs:
   goreleaser:
     runs-on: ubuntu-latest
