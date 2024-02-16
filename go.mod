@@ -3,7 +3,7 @@ module github.com/jklaiber/ebpf-bridge
 go 1.22
 
 require (
-	github.com/cilium/ebpf v0.12.3
+	github.com/cilium/ebpf v0.13.0
 	github.com/google/uuid v1.6.0
 	github.com/jedib0t/go-pretty/v6 v6.5.4
 	github.com/sirupsen/logrus v1.9.3
