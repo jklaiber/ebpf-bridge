@@ -1,6 +1,6 @@
 module github.com/jklaiber/ebpf-bridge
 
-go 1.21.4
+go 1.22
 
 require (
 	github.com/cilium/ebpf v0.12.3

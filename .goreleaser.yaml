@@ -1,0 +1,36 @@
+project_name: ebpf-bridge
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./ebpf-bridge/
+    binary: ebpf-bridge
+    ldflags:
+      - -s -w -X main.build={{.Version}}
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+dockers:
+  - image_templates:
+      - jklaiber/ebpf-bridge
+    dockerfile: ./build/package/Dockerfile
+
+nfpms:
+  - maintainer: Julian Klaiber <oss@klaibernet.ch>
+    description: Linux bridges made simple with eBPF.
+    homepage: https://github.com/jklaiber/ebpf-bridge
+    license: Apache 2.0
+    formats:
+      - deb
+      - rpm
+      - apk
+    scripts:
+      postinstall: ./build/package/after-install.sh
+      preremove: ./build/package/before-remove.sh
+    contents:
+      - src: ./init/ebpf-bridge.service
+        dst: /etc/systemd/system/ebpf-bridge.service

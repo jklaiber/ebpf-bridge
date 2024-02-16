@@ -1,0 +1,11 @@
+[Unit]
+Description=eBPF Bridge Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/ebpf-bridge start-service
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
