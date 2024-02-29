@@ -1,14 +1,10 @@
 <h1 align="center">eBPF-Bridge</h1>
 <p align="center">
     <br>
-	<img src="https://img.shields.io/github/v/tag/jklaiber/ebpf-bridge.svg?label=release&logo=github&style=flat-square">
+    <img src="https://img.shields.io/github/v/tag/jklaiber/ebpf-bridge.svg?label=release&logo=github&style=flat-square">
     <img src="https://img.shields.io/badge/go%20report-A+-brightgreen.svg?style=flat-square">
-	<img src="https://img.shields.io/github/actions/workflow/status/jklaiber/ebpf-bridge/test-go.yaml?branch=main&logo=github&style=flat-square&label=tests">
-	<img src="https://img.shields.io/github/actions/workflow/status/jklaiber/ebpf-bridge/lint-go.yaml?branch=main&logo=github&style=flat-square&label=checks">
-    <img src="https://img.shields.io/codecov/c/github/jklaiber/ebpf-bridge
-?style=flat-square&logo=codecov">
-    <img src="https://img.shields.io/github/license/jklaiber/ebpf-bridge
-?style=flat-square&logo=apache">
+    <img src="https://img.shields.io/github/actions/workflow/status/jklaiber/ebpf-bridge/test-go.yaml?branch=main&logo=github&style=flat-square&label=tests">
+    <img src="https://img.shields.io/github/actions/workflow/status/jklaiber/ebpf-bridge/lint-go.yaml?branch=main&logo=github&style=flat-square&label=checks">
 </p>
 
 <p align="center">
