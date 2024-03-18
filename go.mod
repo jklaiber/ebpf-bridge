@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/cilium/ebpf v0.13.2
 	github.com/google/uuid v1.6.0
-	github.com/jedib0t/go-pretty/v6 v6.5.4
+	github.com/jedib0t/go-pretty/v6 v6.5.5
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
 	github.com/vishvananda/netlink v1.1.0
