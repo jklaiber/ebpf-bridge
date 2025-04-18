@@ -40,7 +40,10 @@ func NewMessagingClient() *MessagingClient {
 }
 
 func connect() (*grpc.ClientConn, error) {
-	return grpc.Dial(fmt.Sprintf("%s://%s", PROTOCOL, SOCKET), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	return grpc.NewClient(
+		fmt.Sprintf("%s://%s", PROTOCOL, SOCKET),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 }
 
 func (mc *MessagingClient) Close() {

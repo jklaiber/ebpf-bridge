@@ -96,7 +96,10 @@ func (s *MessagingServer) ListBridges(ctx context.Context, in *api.ListCommand) 
 }
 
 func (s *MessagingServer) Start() {
-	os.Remove(SOCKET)
+	err := os.Remove(SOCKET)
+	if err != nil && !os.IsNotExist(err) {
+		log.Fatalf("failed to remove socket: %v", err)
+	}
 
 	api.RegisterEbpfBridgeControllerServer(s.server, s)
 	lis, err := net.Listen(PROTOCOL, SOCKET)

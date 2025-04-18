@@ -1,0 +1,25 @@
+{
+    "name": "Linux Dev Container",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "."
+    },
+    "remoteUser": "vscode",
+    "workspaceFolder": "/workspaces/ebpf-bridge",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash",
+                "go.gopath": "/workspaces/go",
+                "go.goroot": "/usr/local/go"
+            },
+            "extensions": [
+                "golang.go",
+                "eamodio.gitlens",
+                "ms-vscode.cpptools",
+                "ms-vscode.cmake-tools"
+            ]
+        }
+    },
+    "postCreateCommand": "chmod +x .devcontainer/post-create.sh && .devcontainer/post-create.sh"
+}
