@@ -1,61 +1,108 @@
 # Copyright (c) 2024 Julian Klaiber
 
-GOCMD=go
-BINARY_NAME=ebpf-bridge
-CLANG ?= clang
-CFLAGS :=  -O2 -g -Wall $(CFLAGS) -DDEBUG
+BINARY_NAME := ebpf-bridge
+OUT_DIR     := out/bin
+VERSION     ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
+LDFLAGS     := -s -w -X github.com/jklaiber/ebpf-bridge/ebpf-bridge/cmd.version=$(VERSION)
 
-GREEN  := $(shell tput -Txterm setaf 2)
-YELLOW := $(shell tput -Txterm setaf 3)
-WHITE  := $(shell tput -Txterm setaf 7)
-CYAN   := $(shell tput -Txterm setaf 6)
-RESET  := $(shell tput -Txterm sgr0)
+CLANG  ?= clang
+CFLAGS := -O2 -g -Wall -Werror
 
-.PHONY: all build clean
+# Container engine used by the container-* and lab-* targets
+# (docker, nerdctl, podman). The dev image contains the full toolchain, so
+# these targets also work on macOS.
+CONTAINER ?= docker
+DEV_IMAGE ?= ebpf-bridge-dev
+LAB_NAME  ?= ebpf-bridge-lab
+DEV_RUN   := $(CONTAINER) run --rm --privileged \
+	-v $(CURDIR):/workspaces/ebpf-bridge -w /workspaces/ebpf-bridge \
+	-v ebpf-bridge-gocache:/root/.cache -v ebpf-bridge-gomod:/go/pkg/mod \
+	$(DEV_IMAGE)
 
-all: go-gen build ## Build the entire project
+# Extra flags for the e2e test binary, e.g. E2E_ARGS="-test.run TestLifecycle".
+E2E_ARGS ?=
+SUDO     := $(shell [ "$$(id -u)" = 0 ] || echo sudo)
 
-install-deps: ## Install development dependencies
-	go install honnef.co/go/tools/cmd/staticcheck@latest
-	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.55.2
-	sudo apt install clang clang-format llvm gcc libbpf-dev libelf-dev make linux-headers-$(uname -r)
-	sudo ln -s /usr/include/x86_64-linux-gnu/asm /usr/include/asm
-# https://github.com/xdp-project/xdp-tools
-# https://github.com/libbpf/bpftool/blob/master/README.md
+.DEFAULT_GOAL := help
+.PHONY: all build clean generate generate-bpf generate-go test test-coverage \
+	e2e e2e-coverage lint fmt check-generated dev-image container-% lab-up lab-shell lab-down help
 
-build: ## Compile the Go binary
-	mkdir -p out/bin
-	$(GOCMD) build -o out/bin/$(BINARY_NAME) ./$(BINARY_NAME)/main.go
+##@ Build
 
-clean: ## Clean build artifacts
-	rm -fr out
+all: generate build ## Generate code and build the binary
 
-go-gen: export BPF_CLANG := $(CLANG)
-go-gen: export BPF_CFLAGS := $(CFLAGS)
-go-gen: ## Generate BPF code and Go bindings
-	go generate ./...
+build: ## Build the Linux binary into out/bin
+	mkdir -p $(OUT_DIR)
+	CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags "$(LDFLAGS)" -o $(OUT_DIR)/$(BINARY_NAME) ./ebpf-bridge
 
-test: ## Run go tests
-	go clean -testcache
-	go test ./...
+clean: ## Remove build artifacts
+	rm -rf out dist coverage.out e2e-coverage.out
 
-test-coverage: ## Run go tests with coverage
-	go clean -testcache
-	go test ./... -coverprofile=coverage.out
+##@ Code generation (needs clang, libbpf-dev, protoc; use container-generate on macOS)
 
-fix-clang-style: ## Fix the clang style
-	find . -iname *.h -o -iname *.c | xargs clang-format -i
+generate: ## Regenerate BPF objects, protobuf code and mocks
+	BPF_CLANG=$(CLANG) BPF_CFLAGS="$(CFLAGS)" go generate ./...
 
-proto-gen: ## Generate protobuf files
-	protoc --go_out=. --go_opt=Mpkg/api/messaging.proto=pkg/api --go-grpc_out=. --go-grpc_opt=Mpkg/api/messaging.proto=pkg/api pkg/api/messaging.proto --experimental_allow_proto3_optional
-	
-help: ## Show this help message
-	@echo ''
-	@echo 'Usage:'
-	@echo '  ${YELLOW}make${RESET} ${GREEN}<target>${RESET}'
-	@echo ''
-	@echo 'Targets:'
-	@awk 'BEGIN {FS = ":.*?## "} { \
-		if (/^[a-zA-Z_0-9-]+:.*?##.*$$/) {printf "    ${YELLOW}%-20s${GREEN}%s${RESET}\n", $$1, $$2} \
-		else if (/^## .*$$/) {printf "  ${CYAN}%s${RESET}\n", substr($$1,4)} \
-		}' $(MAKEFILE_LIST)
+check-generated: generate ## Fail if generated files are out of date
+	git diff --exit-code -- pkg/
+
+##@ Test & lint
+
+test: ## Run unit tests (any OS, no root needed)
+	go test -race -count=1 ./...
+
+test-coverage: ## Run unit tests with coverage
+	go test -race -count=1 -covermode=atomic -coverprofile=coverage.out ./...
+
+e2e: ## Run end-to-end tests with real XDP bridges (Linux; uses sudo if needed)
+	mkdir -p out/e2e
+	CGO_ENABLED=0 go build $(E2E_BUILD_FLAGS) -o out/e2e/ebpf-bridge ./ebpf-bridge
+	go test -c -tags e2e -o out/e2e/e2e.test ./test/e2e
+	$(SUDO) env EBPF_BRIDGE_BIN=$(CURDIR)/out/e2e/ebpf-bridge $(E2E_ENV) \
+		out/e2e/e2e.test -test.v -test.count=1 $(E2E_ARGS)
+
+e2e-coverage: ## Run end-to-end tests and write e2e-coverage.out
+	rm -rf out/e2e/cover && mkdir -p out/e2e/cover
+	$(MAKE) e2e E2E_BUILD_FLAGS="-cover -coverpkg=github.com/jklaiber/ebpf-bridge/..." \
+		E2E_ENV="GOCOVERDIR=$(CURDIR)/out/e2e/cover"
+	go tool covdata textfmt -i=out/e2e/cover -o e2e-coverage.out
+	go tool covdata percent -i=out/e2e/cover
+
+lint: ## Run golangci-lint
+	golangci-lint run ./...
+
+fmt: ## Format Go and C code
+	golangci-lint fmt ./...
+	find bpf -name '*.[ch]' | xargs clang-format -i
+
+##@ Containers (Docker Desktop, Rancher Desktop, OrbStack, Colima, Linux)
+
+dev-image: ## Build the development image
+	$(CONTAINER) build -t $(DEV_IMAGE) .devcontainer
+
+container-%: dev-image ## Run any target in the dev container, e.g. make container-e2e
+	$(DEV_RUN) make $* VERSION=$(VERSION)
+
+lab-up: dev-image build-in-container ## Start an interactive lab (h1, h2, mon namespaces)
+	-$(CONTAINER) rm -f $(LAB_NAME) >/dev/null 2>&1
+	$(CONTAINER) run -d --name $(LAB_NAME) --privileged \
+		-v $(CURDIR):/workspaces/ebpf-bridge -w /workspaces/ebpf-bridge \
+		$(DEV_IMAGE) test/lab/setup.sh
+	@echo "Lab running. Open a shell with: make lab-shell CONTAINER=$(CONTAINER)"
+
+lab-shell: ## Open a shell in the lab
+	$(CONTAINER) exec -it $(LAB_NAME) bash
+
+lab-down: ## Stop the lab
+	-$(CONTAINER) rm -f $(LAB_NAME)
+
+.PHONY: build-in-container
+build-in-container:
+	$(DEV_RUN) make build VERSION=$(VERSION)
+
+##@ Help
+
+help: ## Show this help
+	@awk 'BEGIN {FS = ":.*##"; printf "Usage: make \033[36m<target>\033[0m\n"} \
+		/^[a-zA-Z0-9_%-]+:.*?##/ { printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2 } \
+		/^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) }' $(MAKEFILE_LIST)
