@@ -1,8 +1,15 @@
+coverage:
+  status:
+    project:
+      default:
+        threshold: 2%
+    patch:
+      default:
+        target: 80%
+
 ignore:
-  - "**/bpf/*.go"
-  - "**/linker/*.go"
-  - "**/hostlink/*.go"
+  - "**/mocks/**"
   - "**/*.pb.go"
   - "**/*_bpfeb.go"
   - "**/*_bpfel.go"
-  - "**/*_mock.go"
+  - "test/**"

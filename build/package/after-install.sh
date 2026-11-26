@@ -1,4 +1,4 @@
 #!/bin/sh
+set -e
 systemctl daemon-reload
-systemctl enable ebpf-bridge.service
-systemctl start ebpf-bridge.service
+systemctl enable --now ebpf-bridge.service

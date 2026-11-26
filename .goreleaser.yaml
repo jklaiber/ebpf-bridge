@@ -2,37 +2,63 @@ version: 2
 
 project_name: ebpf-bridge
 
-before:
-  hooks:
-    - go mod tidy
-
 builds:
-  - main: ./ebpf-bridge/
+  - main: ./ebpf-bridge
     binary: ebpf-bridge
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
     ldflags:
-      - -s -w -X main.build={{.Version}}
+      - -s -w -X github.com/jklaiber/ebpf-bridge/ebpf-bridge/cmd.version={{ .Version }}
     goos:
       - linux
     goarch:
       - amd64
+      - arm64
 
-dockers:
-  - use: buildx
-    dockerfile: ./build/package/Dockerfile
-    image_templates:
-      - "ghcr.io/jklaiber/ebpf-bridge:latest"
-      - "ghcr.io/jklaiber/ebpf-bridge:{{ .Tag }}"
+archives:
+  - formats: [tar.gz]
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  use: github
+  sort: asc
+  filters:
+    exclude:
+      - "^Merge "
+
+dockers_v2:
+  - images:
+      - ghcr.io/jklaiber/ebpf-bridge
+    tags:
+      - "{{ .Tag }}"
+      - "{{ if not .Prerelease }}latest{{ end }}"
+    dockerfile: build/package/Dockerfile
+    platforms:
+      - linux/amd64
+      - linux/arm64
+    labels:
+      org.opencontainers.image.source: https://github.com/jklaiber/ebpf-bridge
+      org.opencontainers.image.description: Linux bridges made simple with eBPF
+      org.opencontainers.image.licenses: Apache-2.0
+      org.opencontainers.image.version: "{{ .Version }}"
+      org.opencontainers.image.revision: "{{ .FullCommit }}"
 
 nfpms:
   - maintainer: Julian Klaiber <oss@klaibernet.ch>
     description: Linux bridges made simple with eBPF.
     homepage: https://github.com/jklaiber/ebpf-bridge
-    license: Apache 2.0
+    license: Apache-2.0
     formats:
       - deb
+      - rpm
+    bindir: /usr/bin
     scripts:
       postinstall: ./build/package/after-install.sh
       preremove: ./build/package/before-remove.sh
     contents:
       - src: ./init/ebpf-bridge.service
-        dst: /etc/systemd/system/ebpf-bridge.service
+        dst: /lib/systemd/system/ebpf-bridge.service
