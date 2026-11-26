@@ -1,0 +1,48 @@
+version: "2"
+
+run:
+  build-tags:
+    - e2e
+
+linters:
+  enable:
+    - bodyclose
+    - copyloopvar
+    - errorlint
+    - gocritic
+    - gosec
+    - misspell
+    - nolintlint
+    - revive
+    - unconvert
+    - unparam
+    - usestdlibvars
+  settings:
+    gosec:
+      excludes:
+        - G115 # interface indexes and map slots are small, the int conversions are safe
+        - G204 # tests run the binary under test and iproute2 on purpose
+    revive:
+      rules:
+        - name: exported
+          disabled: true
+        - name: package-comments
+          disabled: true
+  exclusions:
+    generated: strict
+    presets:
+      - common-false-positives
+      - std-error-handling
+    paths:
+      - mocks/
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/jklaiber/ebpf-bridge
+  exclusions:
+    generated: strict

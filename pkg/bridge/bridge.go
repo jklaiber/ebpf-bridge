@@ -1,16 +1,16 @@
-//go:generate mockgen -source=bridge.go -destination=mocks/bridge_mock.go -package=mocks Bridge
+// Package bridge implements a single eBPF bridge between two interfaces.
 package bridge
 
+//go:generate go tool mockgen -source=bridge.go -destination=mocks/bridge_mock.go -package=mocks
+
 import (
+	"errors"
 	"fmt"
 
-	"github.com/google/uuid"
 	"github.com/jklaiber/ebpf-bridge/pkg/bpf"
 	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 	"github.com/jklaiber/ebpf-bridge/pkg/linker"
 )
-
-const PinPath = "/sys/fs/bpf/devmap_"
 
 type Bridge interface {
 	Add() error
@@ -26,35 +26,41 @@ type BridgeFactory interface {
 }
 
 type EbpfBridgeFactory struct {
-	bpf bpf.Bpf
+	loader    bpf.Loader
+	newLinker linker.Factory
 }
 
-func NewEbpfBridgeFactory(bpf bpf.Bpf) *EbpfBridgeFactory {
+func NewEbpfBridgeFactory(loader bpf.Loader, newLinker linker.Factory) *EbpfBridgeFactory {
 	return &EbpfBridgeFactory{
-		bpf: bpf,
+		loader:    loader,
+		newLinker: newLinker,
 	}
 }
 
 func (f *EbpfBridgeFactory) NewBridge(name string, iface1 hostlink.Link, iface2 hostlink.Link, monitorIface hostlink.Link) Bridge {
 	return &EbpfBridge{
-		bpf:          f.bpf,
+		loader:       f.loader,
+		newLinker:    f.newLinker,
 		name:         name,
 		iface1:       iface1,
 		iface2:       iface2,
 		monitorIface: monitorIface,
-		mapUuid:      uuid.New().String(),
 	}
 }
 
+// EbpfBridge forwards every frame received on one interface to the other one
+// and, if set, to the monitor interface. Frames received on the monitor
+// interface are not forwarded.
 type EbpfBridge struct {
-	bpf          bpf.Bpf
+	loader       bpf.Loader
+	newLinker    linker.Factory
 	name         string
 	iface1       hostlink.Link
 	iface2       hostlink.Link
 	monitorIface hostlink.Link
-	iface1Linker linker.Linker
-	iface2Linker linker.Linker
-	mapUuid      string
+
+	objects bpf.Objects
+	linkers []linker.Linker
 }
 
 func (e *EbpfBridge) Name() string {
@@ -73,66 +79,65 @@ func (e *EbpfBridge) MonitorInterface() hostlink.Link {
 	return e.monitorIface
 }
 
-func (e *EbpfBridge) Add() error {
-	bpfObjects, err := e.bpf.ReadBpfObjects()
+// Add loads the program, configures the ports and attaches the program to
+// both bridged interfaces. On failure everything done so far is rolled back.
+func (e *EbpfBridge) Add() (err error) {
+	if e.objects != nil {
+		return fmt.Errorf("bridge %s is already active", e.name)
+	}
+	objects, err := e.loader.Load()
 	if err != nil {
-		return fmt.Errorf("failed to read bpf objects: %w", err)
+		return err
 	}
-	linkerIface1 := linker.NewXdpLinker(e.iface1, bpfObjects.XdpBridge)
-	e.iface1Linker = linkerIface1
-	linkerIface2 := linker.NewXdpLinker(e.iface2, bpfObjects.XdpBridge)
-	e.iface2Linker = linkerIface2
+	e.objects = objects
+	defer func() {
+		if err != nil {
+			err = errors.Join(err, e.teardown())
+		}
+	}()
 
-	err = bpfObjects.Devmap.Pin(PinPath + e.mapUuid)
-	if err != nil {
-		return fmt.Errorf("failed to pin devmap: %w", err)
+	if err := objects.SetPort(bpf.SlotIface1, e.iface1.Index()); err != nil {
+		return err
 	}
-
-	if err := bpfObjects.Devmap.Put(uint32(0), uint32(e.iface1.Index())); err != nil {
-		return fmt.Errorf("failed to put iface1 into devmap: %w", err)
-	}
-	if err := bpfObjects.Devmap.Put(uint32(1), uint32(e.iface2.Index())); err != nil {
-		return fmt.Errorf("failed to put iface2 into devmap: %w", err)
+	if err := objects.SetPort(bpf.SlotIface2, e.iface2.Index()); err != nil {
+		return err
 	}
 	if e.monitorIface != nil {
-		if err := bpfObjects.Devmap.Put(uint32(2), uint32(e.monitorIface.Index())); err != nil {
-			return fmt.Errorf("failed to put monitorIface into devmap: %w", err)
+		if err := objects.SetPort(bpf.SlotMonitor, e.monitorIface.Index()); err != nil {
+			return err
 		}
 	}
-	err = linkerIface1.Attach()
-	if err != nil {
-		return fmt.Errorf("failed to attach iface1: %w", err)
-	}
-	err = linkerIface2.Attach()
-	if err != nil {
-		return fmt.Errorf("failed to attach iface2: %w", err)
-	}
 
+	for _, iface := range []hostlink.Link{e.iface1, e.iface2} {
+		l := e.newLinker(iface, objects.Program())
+		if err := l.Attach(); err != nil {
+			return err
+		}
+		e.linkers = append(e.linkers, l)
+	}
 	return nil
 }
 
+// Remove detaches the program from all interfaces and releases it.
 func (e *EbpfBridge) Remove() error {
-	err := e.iface1Linker.Detach()
-	if err != nil {
-		return fmt.Errorf("failed to detach iface1: %w", err)
+	if e.objects == nil {
+		return fmt.Errorf("bridge %s is not active", e.name)
 	}
-	err = e.iface2Linker.Detach()
-	if err != nil {
-		return fmt.Errorf("failed to detach iface2: %w", err)
+	if err := e.teardown(); err != nil {
+		return fmt.Errorf("failed to remove bridge %s: %w", e.name, err)
 	}
-
-	m, err := e.bpf.LoadPinnedMap(PinPath + e.mapUuid)
-	if err != nil {
-		return fmt.Errorf("failed to load pinned map: %w", err)
-	}
-	err = m.Unpin()
-	if err != nil {
-		return fmt.Errorf("failed to unpin map: %w", err)
-	}
-	err = m.Close()
-	if err != nil {
-		return fmt.Errorf("failed to close map: %w", err)
-	}
-
 	return nil
+}
+
+func (e *EbpfBridge) teardown() error {
+	var errs []error
+	for _, l := range e.linkers {
+		errs = append(errs, l.Detach())
+	}
+	e.linkers = nil
+	if e.objects != nil {
+		errs = append(errs, e.objects.Close())
+		e.objects = nil
+	}
+	return errors.Join(errs...)
 }

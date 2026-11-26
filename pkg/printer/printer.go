@@ -1,14 +1,19 @@
-//go:generate mockgen -source=printer.go -destination=mocks/printer_mock.go -package=mocks Printer
+// Package printer renders bridges for the CLI.
 package printer
+
+//go:generate go tool mockgen -source=printer.go -destination=mocks/printer_mock.go -package=mocks
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/jedib0t/go-pretty/v6/table"
+
 	"github.com/jklaiber/ebpf-bridge/pkg/api"
 	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 )
+
+// NoBridges is printed when the service manages no bridges.
+const NoBridges = "No bridges found"
 
 type Printer interface {
 	PrintBridgeDescriptions(bridges []*api.BridgeDescription) string
@@ -19,31 +24,33 @@ type PrettyPrinter struct {
 }
 
 func NewPrettyPrinter(linkFactory hostlink.LinkFactory) *PrettyPrinter {
-	return &PrettyPrinter{
-		linkFactory: linkFactory,
-	}
+	return &PrettyPrinter{linkFactory: linkFactory}
 }
 
 func (p *PrettyPrinter) PrintBridgeDescriptions(bridges []*api.BridgeDescription) string {
-	t := table.NewWriter()
-	t.SetOutputMirror(os.Stdout)
-	t.AppendHeader(table.Row{"Name", "Iface1", "Iface2", "Monitor-Iface"})
-
 	if len(bridges) == 0 {
-		fmt.Println("No bridges found")
-		return "No bridges found"
+		return NoBridges
 	}
-
-	for _, bridge := range bridges {
-		iface1, _ := p.linkFactory.NewLinkWithIndex(int(bridge.Iface1))
-		iface2, _ := p.linkFactory.NewLinkWithIndex(int(bridge.Iface2))
-		if bridge.Monitor == nil {
-			t.AppendRow([]interface{}{bridge.Name, iface1.Name(), iface2.Name(), ""})
-		} else {
-			monitorIface, _ := p.linkFactory.NewLinkWithIndex(int(*bridge.Monitor))
-			t.AppendRow([]interface{}{bridge.Name, iface1.Name(), iface2.Name(), monitorIface.Name()})
+	t := table.NewWriter()
+	t.AppendHeader(table.Row{"Name", "Iface1", "Iface2", "Monitor-Iface"})
+	for _, b := range bridges {
+		monitor := ""
+		if b.Monitor != nil {
+			monitor = p.ifaceName(*b.Monitor)
 		}
+		t.AppendRow(table.Row{b.GetName(), p.ifaceName(b.GetIface1()), p.ifaceName(b.GetIface2()), monitor})
 		t.AppendSeparator()
 	}
 	return t.Render()
+}
+
+// ifaceName resolves an interface index to its name. The CLI may run in a
+// different network namespace than the service or the interface may be gone,
+// so fall back to the index.
+func (p *PrettyPrinter) ifaceName(index int32) string {
+	l, err := p.linkFactory.NewLinkWithIndex(int(index))
+	if err != nil || l == nil {
+		return fmt.Sprintf("#%d", index)
+	}
+	return l.Name()
 }

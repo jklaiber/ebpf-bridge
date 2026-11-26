@@ -1,5 +1,7 @@
-//go:generate mockgen -source=hostlink.go -destination=mocks/hostlink_mock.go -package=mocks Link
+// Package hostlink resolves network interfaces of the host.
 package hostlink
+
+//go:generate go tool mockgen -source=hostlink.go -destination=mocks/hostlink_mock.go -package=mocks
 
 import "github.com/vishvananda/netlink"
 

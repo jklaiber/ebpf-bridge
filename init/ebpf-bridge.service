@@ -1,5 +1,6 @@
 [Unit]
 Description=eBPF Bridge Service
+Documentation=https://github.com/jklaiber/ebpf-bridge
 After=network.target
 
 [Service]

@@ -14,18 +14,15 @@ type ListCommand struct {
 
 func NewListCommand(linkFactory hostlink.LinkFactory, messagingClient messaging.Client) *ListCommand {
 	return &ListCommand{
-		Command: Command{
-			messagingClient: messagingClient,
-		},
+		Command:     Command{messagingClient: messagingClient},
 		linkFactory: linkFactory,
 	}
 }
 
 func (l *ListCommand) Execute() (string, error) {
-	returnMsg, err := l.messagingClient.ListBridges(&api.ListCommand{})
+	resp, err := l.messagingClient.ListBridges(&api.ListCommand{})
 	if err != nil {
 		return "", err
 	}
-	printer := printer.NewPrettyPrinter(l.linkFactory)
-	return printer.PrintBridgeDescriptions(returnMsg.Bridges), nil
+	return printer.NewPrettyPrinter(l.linkFactory).PrintBridgeDescriptions(resp.GetBridges()), nil
 }

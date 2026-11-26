@@ -1,6 +1,9 @@
 package command
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/jklaiber/ebpf-bridge/pkg/api"
 	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
@@ -17,9 +20,7 @@ type AddCommand struct {
 
 func NewAddCommand(hostlinkFactory hostlink.LinkFactory, messagingClient messaging.Client, bridgeName, iface1, iface2, monitorIface string) *AddCommand {
 	return &AddCommand{
-		Command: Command{
-			messagingClient: messagingClient,
-		},
+		Command:         Command{messagingClient: messagingClient},
 		hostLinkFactory: hostlinkFactory,
 		BridgeName:      bridgeName,
 		Iface1:          iface1,
@@ -28,39 +29,37 @@ func NewAddCommand(hostlinkFactory hostlink.LinkFactory, messagingClient messagi
 	}
 }
 
+func (a *AddCommand) lookup(name string) (int32, error) {
+	l, err := a.hostLinkFactory.NewLinkWithName(name)
+	if err != nil {
+		return 0, fmt.Errorf("interface %s: %w", name, err)
+	}
+	return int32(l.Index()), nil
+}
+
 func (a *AddCommand) Execute() (string, error) {
-	iface1Index, err := a.hostLinkFactory.NewLinkWithName(a.Iface1)
-	if err != nil {
+	msg := &api.AddCommand{Name: a.BridgeName}
+	var err error
+	if msg.Iface1, err = a.lookup(a.Iface1); err != nil {
 		return "", err
 	}
-
-	iface2Index, err := a.hostLinkFactory.NewLinkWithName(a.Iface2)
-	if err != nil {
+	if msg.Iface2, err = a.lookup(a.Iface2); err != nil {
 		return "", err
 	}
-
-	msg := &api.AddCommand{
-		Name: a.BridgeName,
-	}
-
 	if a.MonitorIface != "" {
-		monitorIfaceIndex, err := a.hostLinkFactory.NewLinkWithName(a.MonitorIface)
+		monitor, err := a.lookup(a.MonitorIface)
 		if err != nil {
 			return "", err
 		}
-		msg.Iface1 = int32(iface1Index.Index())
-		msg.Iface2 = int32(iface2Index.Index())
-		monitorValue := int32(monitorIfaceIndex.Index())
-		msg.Monitor = &monitorValue
-	} else {
-		msg.Iface1 = int32(iface1Index.Index())
-		msg.Iface2 = int32(iface2Index.Index())
+		msg.Monitor = &monitor
 	}
 
-	returnMsg, err := a.messagingClient.AddBridge(msg)
+	resp, err := a.messagingClient.AddBridge(msg)
 	if err != nil {
 		return "", err
 	}
-
-	return returnMsg.Message, nil
+	if !resp.GetSuccess() {
+		return "", errors.New(resp.GetMessage())
+	}
+	return resp.GetMessage(), nil
 }

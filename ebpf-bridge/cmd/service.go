@@ -1,45 +1,59 @@
 package cmd
 
 import (
-	"fmt"
+	"errors"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
+
 	"github.com/jklaiber/ebpf-bridge/pkg/bpf"
 	"github.com/jklaiber/ebpf-bridge/pkg/bridge"
 	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
+	"github.com/jklaiber/ebpf-bridge/pkg/linker"
+	"github.com/jklaiber/ebpf-bridge/pkg/logging"
 	"github.com/jklaiber/ebpf-bridge/pkg/manager"
+	"github.com/jklaiber/ebpf-bridge/pkg/messaging"
 	"github.com/jklaiber/ebpf-bridge/pkg/service"
-	"github.com/spf13/cobra"
 )
 
-var serviceCmd = &cobra.Command{
-	Use:   "start-service",
-	Short: "Start the ebpf-bridge managing service",
-	Run: func(cmd *cobra.Command, args []string) {
-		checkIsRoot()
-		bpf := bpf.NewBpfLinux()
-		linkFactory := hostlink.NewHostLinkFactory()
-		bridgeFactory := bridge.NewEbpfBridgeFactory(bpf)
-		bridgeManager := manager.NewBridgeManager(linkFactory, bridgeFactory)
-		service := service.NewEbpfBridgeService(bridgeManager)
-		service.Start()
-		sigChan := make(chan os.Signal, 1)
-		signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+func newServiceCmd() *cobra.Command {
+	var logLevel string
+	c := &cobra.Command{
+		Use:   "start-service",
+		Short: "Start the ebpf-bridge service",
+		Args:  cobra.NoArgs,
+		RunE: func(_ *cobra.Command, _ []string) error {
+			if os.Geteuid() != 0 {
+				return errors.New("the ebpf-bridge service must be run as root")
+			}
+			level, err := logrus.ParseLevel(logLevel)
+			if err != nil {
+				return err
+			}
+			logging.DefaultLogger.SetLevel(level)
 
-		<-sigChan
-		fmt.Println("Received signal, exiting")
-		service.Stop()
-	},
+			bridgeManager := manager.NewBridgeManager(
+				hostlink.NewHostLinkFactory(),
+				bridge.NewEbpfBridgeFactory(bpf.NewKernelLoader(), linker.NewXdpLinkerFactory()),
+			)
+			svc := service.NewEbpfBridgeService(bridgeManager, messaging.NewMessagingServer(bridgeManager, socketPath))
+			if err := svc.Start(); err != nil {
+				return err
+			}
+
+			sig := make(chan os.Signal, 1)
+			signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+			<-sig
+			return svc.Stop()
+		},
+	}
+	c.Flags().StringVar(&logLevel, "log-level", "info", "Log level (debug, info, warn, error)")
+	return c
 }
 
 func init() {
-	rootCmd.AddCommand(serviceCmd)
-}
-
-func checkIsRoot() {
-	if os.Getuid() != 0 {
-		log.Fatal("The ebpf-bridge service must be run as root.")
-	}
+	rootCmd.AddCommand(newServiceCmd())
 }

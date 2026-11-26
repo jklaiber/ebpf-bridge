@@ -1,5 +1,6 @@
-FROM scratch as final
+FROM scratch
 
-COPY ebpf-bridge /ebpf-bridge
+ARG TARGETPLATFORM
+COPY $TARGETPLATFORM/ebpf-bridge /ebpf-bridge
 
 ENTRYPOINT ["/ebpf-bridge", "start-service"]

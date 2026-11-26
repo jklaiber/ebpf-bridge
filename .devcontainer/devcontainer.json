@@ -1,25 +1,25 @@
 {
-    "name": "Linux Dev Container",
+    "name": "ebpf-bridge",
     "build": {
         "dockerfile": "Dockerfile",
         "context": "."
     },
-    "remoteUser": "vscode",
+    // Loading and attaching XDP programs and creating network namespaces for
+    // the e2e tests needs a privileged container.
+    "privileged": true,
     "workspaceFolder": "/workspaces/ebpf-bridge",
+    "postCreateCommand": "git config --global --add safe.directory /workspaces/ebpf-bridge && go mod download",
     "customizations": {
         "vscode": {
             "settings": {
-                "terminal.integrated.shell.linux": "/bin/bash",
-                "go.gopath": "/workspaces/go",
-                "go.goroot": "/usr/local/go"
+                "go.buildTags": "e2e",
+                "go.lintTool": "golangci-lint"
             },
             "extensions": [
                 "golang.go",
-                "eamodio.gitlens",
                 "ms-vscode.cpptools",
-                "ms-vscode.cmake-tools"
+                "zxh404.vscode-proto3"
             ]
         }
-    },
-    "postCreateCommand": "chmod +x .devcontainer/post-create.sh && .devcontainer/post-create.sh"
+    }
 }

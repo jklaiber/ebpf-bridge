@@ -1,8 +1,8 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Report something that does not work as expected
 title: ''
-labels: ''
+labels: bug
 assignees: ''
 
 ---
@@ -10,20 +10,27 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+**To reproduce**
+The commands you ran (for example `ebpf-bridge add ...`), and their output.
+
+```
+```
 
 **Expected behavior**
-A clear and concise description of what you expected to happen.
+What you expected to happen instead.
 
-**System (please complete the following information):**
- - OS: [e.g. Ubuntu]
- - OS version: [e.g. 22.04]
- - Kernel version [e.g. 5]
+**Service logs**
+Output of `journalctl -u ebpf-bridge` or `docker logs <container>`.
+
+```
+```
+
+**Environment**
+ - ebpf-bridge version (`ebpf-bridge --version`):
+ - Installation method (deb/rpm package, Docker, from source):
+ - Distribution and version:
+ - Kernel version (`uname -r`):
+ - Interface types involved (physical NIC/driver, veth, VLAN, ...):
 
 **Additional context**
-Add any other context about the problem here.
+Anything else that might help, for example the network topology.

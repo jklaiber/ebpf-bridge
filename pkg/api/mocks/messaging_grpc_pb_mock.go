@@ -22,6 +22,7 @@ import (
 type MockEbpfBridgeControllerClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockEbpfBridgeControllerClientMockRecorder
+	isgomock struct{}
 }
 
 // MockEbpfBridgeControllerClientMockRecorder is the mock recorder for MockEbpfBridgeControllerClient.
@@ -105,6 +106,7 @@ func (mr *MockEbpfBridgeControllerClientMockRecorder) RemoveBridge(ctx, in any, 
 type MockEbpfBridgeControllerServer struct {
 	ctrl     *gomock.Controller
 	recorder *MockEbpfBridgeControllerServerMockRecorder
+	isgomock struct{}
 }
 
 // MockEbpfBridgeControllerServerMockRecorder is the mock recorder for MockEbpfBridgeControllerServer.
@@ -185,6 +187,7 @@ func (mr *MockEbpfBridgeControllerServerMockRecorder) mustEmbedUnimplementedEbpf
 type MockUnsafeEbpfBridgeControllerServer struct {
 	ctrl     *gomock.Controller
 	recorder *MockUnsafeEbpfBridgeControllerServerMockRecorder
+	isgomock struct{}
 }
 
 // MockUnsafeEbpfBridgeControllerServerMockRecorder is the mock recorder for MockUnsafeEbpfBridgeControllerServer.

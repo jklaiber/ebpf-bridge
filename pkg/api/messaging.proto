@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package messaging;
 
+option go_package = "github.com/jklaiber/ebpf-bridge/pkg/api";
+
 message AddCommand {
     string name = 1;
     int32 iface1 = 2;

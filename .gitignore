@@ -12,4 +12,5 @@
 .vscode/
 .VSCodeCounter
 out
-dist
+distcoverage.out
+e2e-coverage.out
