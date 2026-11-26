@@ -89,6 +89,10 @@ jobs:
         kernel: ["5.15", "6.1", "6.6", "6.12", "6.18"]
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      # Build date of the quay.io/lvh-images/kind images. The action needs a
+      # dated tag (<kernel>-<date>), not the floating <kernel>-main tag.
+      LVH_IMAGE_DATE: "20261021.083220"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
@@ -100,7 +104,7 @@ jobs:
         uses: cilium/little-vm-helper@003bc00af42bdd704e8b0505dc47d571081a233a # v0.0.34
         with:
           test-name: e2e-${{ matrix.kernel }}
-          image-version: ${{ matrix.kernel }}-main
+          image-version: ${{ matrix.kernel }}-${{ env.LVH_IMAGE_DATE }}
           host-mount: ./
           install-dependencies: "true"
           cmd: |
