@@ -42,6 +42,7 @@ make container-lint
 | `make e2e` | The real binary: builds it, starts services, creates network namespaces and sends frames through XDP bridges | Linux, root (uses `sudo`) |
 | `make container-e2e` | Same, in the dev container | Docker or similar |
 | `make lint` | golangci-lint (config in `.golangci.yml`) | |
+| `make vuln` | govulncheck: known vulnerabilities in dependencies and the Go toolchain | |
 | `make check-generated` | Generated code matches its sources | clang, protoc |
 
 The end-to-end tests ([test/e2e](./test/e2e)) build a topology of three hosts
@@ -54,6 +55,9 @@ The end-to-end tests ([test/e2e](./test/e2e)) build a topology of three hosts
 - IP connectivity, isolation between multiple bridges
 - the CLI: add, list, remove and error handling
 - that no XDP program stays attached when the service stops or is killed
+
+CI additionally runs the e2e suite in VMs with older and newer kernels (see
+the `e2e-kernels` job), using [little-vm-helper](https://github.com/cilium/little-vm-helper).
 
 Run a single test with `make e2e E2E_ARGS="-test.run TestLifecycle"`.
 `make e2e-coverage` also records coverage of the service and CLI processes.
@@ -72,6 +76,14 @@ ip netns exec mon tcpdump -ni eth0
 ```
 
 Stop it with `make lab-down`.
+
+## Dependencies and toolchain
+
+Dependabot proposes updates for Go modules, GitHub Actions (pinned to commit
+SHAs) and container base images (pinned to digests) every week. The Go
+toolchain used by CI and releases is the `toolchain` line in `go.mod`; bump it
+when a new Go patch release is out. `make vuln` and the weekly CI run report
+known vulnerabilities in it.
 
 ## Code generation
 
@@ -119,8 +131,9 @@ Releases are automated with
    the version and adds the new entries to [CHANGELOG.md](./CHANGELOG.md).
 2. Merging the release pull request creates the `vX.Y.Z` tag and the GitHub
    release with the changelog as release notes.
-3. GoReleaser then attaches binaries and `.deb`/`.rpm` packages for amd64 and
-   arm64 and pushes a multi-arch image to `ghcr.io/jklaiber/ebpf-bridge`.
+3. GoReleaser then attaches binaries, `.deb`/`.rpm` packages and SBOMs for
+   amd64 and arm64 and pushes a multi-arch image to `ghcr.io/jklaiber/ebpf-bridge`.
+   All artifacts get signed build provenance attestations.
 
 To force a specific version, add a `Release-As: x.y.z` footer to a commit
 message on `main`. To rebuild the artifacts of an existing tag, run the
