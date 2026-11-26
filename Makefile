@@ -24,7 +24,7 @@ E2E_ARGS ?=
 SUDO     := $(shell [ "$$(id -u)" = 0 ] || echo sudo)
 
 .DEFAULT_GOAL := help
-.PHONY: all build clean generate generate-bpf generate-go test test-coverage \
+.PHONY: all build clean generate generate-bpf generate-go test test-coverage vuln e2e-build \
 	e2e e2e-coverage lint fmt check-generated dev-image container-% lab-up lab-shell lab-down help
 
 ##@ Build
@@ -54,10 +54,12 @@ test: ## Run unit tests (any OS, no root needed)
 test-coverage: ## Run unit tests with coverage
 	go test -race -count=1 -covermode=atomic -coverprofile=coverage.out ./...
 
-e2e: ## Run end-to-end tests with real XDP bridges (Linux; uses sudo if needed)
+e2e-build: ## Build the binary and e2e test binary into out/e2e (static, any Linux)
 	mkdir -p out/e2e
-	CGO_ENABLED=0 go build $(E2E_BUILD_FLAGS) -o out/e2e/ebpf-bridge ./ebpf-bridge
-	go test -c -tags e2e -o out/e2e/e2e.test ./test/e2e
+	CGO_ENABLED=0 GOOS=linux go build $(E2E_BUILD_FLAGS) -o out/e2e/ebpf-bridge ./ebpf-bridge
+	CGO_ENABLED=0 GOOS=linux go test -c -tags e2e -o out/e2e/e2e.test ./test/e2e
+
+e2e: e2e-build ## Run end-to-end tests with real XDP bridges (Linux; uses sudo if needed)
 	$(SUDO) env EBPF_BRIDGE_BIN=$(CURDIR)/out/e2e/ebpf-bridge $(E2E_ENV) \
 		out/e2e/e2e.test -test.v -test.count=1 $(E2E_ARGS)
 
@@ -70,6 +72,9 @@ e2e-coverage: ## Run end-to-end tests and write e2e-coverage.out
 
 lint: ## Run golangci-lint
 	golangci-lint run ./...
+
+vuln: ## Check for known vulnerabilities in dependencies and the Go toolchain
+	go tool govulncheck ./...
 
 fmt: ## Format Go and C code
 	golangci-lint fmt ./...
