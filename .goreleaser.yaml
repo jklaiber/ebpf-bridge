@@ -23,6 +23,10 @@ archives:
 checksum:
   name_template: checksums.txt
 
+# SPDX SBOM for every archive (needs syft).
+sboms:
+  - artifacts: archive
+
 # The release and its notes are created by release-please from CHANGELOG.md;
 # GoReleaser only uploads the artifacts.
 release:
@@ -36,7 +40,12 @@ dockers_v2:
       - ghcr.io/jklaiber/ebpf-bridge
     tags:
       - "{{ .Tag }}"
+      - "{{ .Version }}"
+      - "{{ if not .Prerelease }}{{ .Major }}.{{ .Minor }}{{ end }}"
+      - "{{ if not .Prerelease }}{{ .Major }}{{ end }}"
       - "{{ if not .Prerelease }}latest{{ end }}"
+    # Attach an SBOM attestation to the image.
+    sbom: true
     dockerfile: build/package/Dockerfile
     platforms:
       - linux/amd64
