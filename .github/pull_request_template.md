@@ -1,33 +1,19 @@
-# Pull Request Template
-
 ## Description
 
-Please include a summary of the change or the feature being introduced. Link to any relevant issues or pull requests. Explain the context and motivation behind your changes.
+What does this change and why? Link related issues (`Fixes #123`).
 
-Fixes # (issue)
+## Type of change
 
-## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation
+- [ ] Maintenance (dependencies, CI, tooling)
 
-Please delete options that are not relevant.
+## Checklist
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-
-## Checklist:
-
-Before submitting your PR, please review and confirm the following:
-
-- [ ] I have reviewed the [contributing guidelines](./CONTRIBUTING.md).
-- [ ] I have performed a self-review of my own code.
-- [ ] I have commented my code, particularly in hard-to-understand areas.
-- [ ] I have made corresponding changes to the documentation.
-- [ ] My changes generate no new warnings.
-- [ ] Any dependent changes have been merged and published in downstream modules.
-
-## Additional Information
-
-Any additional information, configuration, or data that might be necessary to reproduce the issue or feature.
-
-Thank you for contributing!
+- [ ] I have read [CONTRIBUTING.md](../CONTRIBUTING.md).
+- [ ] `make test` and `make lint` pass.
+- [ ] `make e2e` (or `make container-e2e`) passes if the change touches the service, the BPF program or the CLI.
+- [ ] I added or updated tests for the change.
+- [ ] I updated the documentation if behavior changed.
