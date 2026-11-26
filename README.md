@@ -3,6 +3,7 @@
     <a href="https://github.com/jklaiber/ebpf-bridge/releases"><img src="https://img.shields.io/github/v/tag/jklaiber/ebpf-bridge.svg?label=release&logo=github&style=flat-square"></a>
     <a href="https://github.com/jklaiber/ebpf-bridge/actions/workflows/ci.yaml"><img src="https://img.shields.io/github/actions/workflow/status/jklaiber/ebpf-bridge/ci.yaml?branch=main&logo=github&style=flat-square&label=ci"></a>
     <a href="https://codecov.io/gh/jklaiber/ebpf-bridge"><img src="https://img.shields.io/codecov/c/github/jklaiber/ebpf-bridge?style=flat-square&logo=codecov"></a>
+    <a href="https://scorecard.dev/viewer/?uri=github.com/jklaiber/ebpf-bridge"><img src="https://img.shields.io/ossf-scorecard/github.com/jklaiber/ebpf-bridge?style=flat-square&label=openssf%20scorecard"></a>
     <a href="https://goreportcard.com/report/github.com/jklaiber/ebpf-bridge"><img src="https://goreportcard.com/badge/github.com/jklaiber/ebpf-bridge?style=flat-square"></a>
     <a href="./LICENSE"><img src="https://img.shields.io/github/license/jklaiber/ebpf-bridge?style=flat-square"></a>
 </p>
@@ -27,7 +28,8 @@ Unlike a Linux bridge, <code>ebpf-bridge</code> forwards <em>every</em> frame, i
 
 ## 🔧 Requirements
 
-* Linux kernel 5.13 or later (XDP devmap broadcast, `BPF_F_EXCLUDE_INGRESS`)
+* Linux kernel 5.13 or later (XDP devmap broadcast, `BPF_F_EXCLUDE_INGRESS`).
+  CI runs the end-to-end tests on kernels 5.15, 6.1, 6.6, 6.12 and 6.18.
 * amd64 or arm64
 * root privileges for the service
 * systemd (for the packaged service) or Docker
@@ -55,13 +57,25 @@ sudo systemctl status ebpf-bridge.service
 ### Docker
 
 ```
-docker run -d --name ebpf-bridge --privileged --network host ghcr.io/jklaiber/ebpf-bridge:latest
+docker run -d --name ebpf-bridge --privileged --network host ghcr.io/jklaiber/ebpf-bridge:2
 ```
 
+Images are tagged `latest`, `<major>`, `<major>.<minor>` and `<version>`.
 Run the CLI inside the container:
 
 ```
 docker exec ebpf-bridge /ebpf-bridge list
+```
+
+### Verifying a release
+
+Every release archive, package and container image has a signed
+[build provenance attestation](https://docs.github.com/actions/security-for-github-actions/using-artifact-attestations)
+and an SBOM. Verify a download or the image with the GitHub CLI:
+
+```
+gh attestation verify ebpf-bridge_<version>_linux_amd64.deb --repo jklaiber/ebpf-bridge
+gh attestation verify oci://ghcr.io/jklaiber/ebpf-bridge:<version> --repo jklaiber/ebpf-bridge
 ```
 
 ### From source
