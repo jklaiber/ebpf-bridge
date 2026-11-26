@@ -23,12 +23,13 @@ archives:
 checksum:
   name_template: checksums.txt
 
+# The release and its notes are created by release-please from CHANGELOG.md;
+# GoReleaser only uploads the artifacts.
+release:
+  mode: keep-existing
+
 changelog:
-  use: github
-  sort: asc
-  filters:
-    exclude:
-      - "^Merge "
+  disable: true
 
 dockers_v2:
   - images:

@@ -37,7 +37,8 @@ Unlike a Linux bridge, <code>ebpf-bridge</code> forwards <em>every</em> frame, i
 ### Packages
 
 Download the `.deb` or `.rpm` for your architecture from the
-[releases page](https://github.com/jklaiber/ebpf-bridge/releases) and install it:
+[releases page](https://github.com/jklaiber/ebpf-bridge/releases) and install it.
+See the [changelog](./CHANGELOG.md) for what changed in each release.
 
 ```
 sudo apt install ./ebpf-bridge_<version>_linux_amd64.deb

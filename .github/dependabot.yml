@@ -4,6 +4,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: fix
+      include: scope
     groups:
       go-dependencies:
         update-types: [minor, patch]
@@ -11,6 +14,9 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    commit-message:
+      prefix: ci
+      include: scope
     groups:
       github-actions:
         patterns: ["*"]
@@ -20,3 +26,6 @@ updates:
       - /build/package
     schedule:
       interval: weekly
+    commit-message:
+      prefix: build
+      include: scope

@@ -92,11 +92,37 @@ The code generators are pinned as Go tools in `go.mod`.
 - Keep changes focused and add tests for new behavior and bug fixes.
 - Make sure `make test`, `make lint` and, for changes to the service, CLI or BPF
   program, `make e2e` pass.
-- Use clear commit messages in the imperative mood ("Add ...", "Fix ...").
+- Pull requests are squash merged, so the **pull request title** becomes the
+  commit message on `main`. It must follow
+  [Conventional Commits](https://www.conventionalcommits.org), which a CI check
+  enforces. The type decides whether and how the change appears in the
+  changelog and how the version is bumped:
+
+  | Title | Changelog section | Version bump |
+  | --- | --- | --- |
+  | `feat: add VLAN filter` | Features | minor |
+  | `fix: detach XDP program on error` | Bug Fixes | patch |
+  | `perf: ...` / `revert: ...` | Performance Improvements / Reverts | patch |
+  | `docs: ...` | Documentation | none |
+  | `refactor:`, `test:`, `build:`, `ci:`, `chore:` | not listed | none |
+
+  Mark breaking changes with `!` (`feat!: ...`) or a `BREAKING CHANGE:` footer.
+  This bumps the major version.
 
 ## Releases
 
-Pushing a tag `vX.Y.Z` runs [GoReleaser](./.goreleaser.yaml), which publishes
-binaries, `.deb`/`.rpm` packages for amd64 and arm64 and a multi-arch image to
-`ghcr.io/jklaiber/ebpf-bridge`. The CI job "Release dry run" checks this on
-every pull request.
+Releases are automated with
+[release-please](https://github.com/googleapis/release-please) and
+[GoReleaser](https://goreleaser.com):
+
+1. Every merge to `main` updates an open **release pull request** that bumps
+   the version and adds the new entries to [CHANGELOG.md](./CHANGELOG.md).
+2. Merging the release pull request creates the `vX.Y.Z` tag and the GitHub
+   release with the changelog as release notes.
+3. GoReleaser then attaches binaries and `.deb`/`.rpm` packages for amd64 and
+   arm64 and pushes a multi-arch image to `ghcr.io/jklaiber/ebpf-bridge`.
+
+To force a specific version, add a `Release-As: x.y.z` footer to a commit
+message on `main`. To rebuild the artifacts of an existing tag, run the
+*Release* workflow manually with that tag. The CI job "Release dry run" checks
+the GoReleaser configuration on every pull request.

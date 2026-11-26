@@ -1,20 +1,52 @@
 name: Release
 
+# release-please keeps a release pull request open that bumps the version and
+# updates CHANGELOG.md from the Conventional Commits merged to main. Merging
+# it creates the tag and GitHub release, and GoReleaser then attaches the
+# binaries, packages and container images.
 on:
   push:
-    tags:
-      - v[0-9]+.*
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing tag to (re)build release artifacts for, e.g. v2.0.0
+        required: true
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
 
 jobs:
-  goreleaser:
+  release-please:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - uses: googleapis/release-please-action@v5
+        id: release
+        with:
+          # A personal access token or app token lets CI run on the release
+          # pull request; GITHUB_TOKEN works but does not trigger workflows.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+
+  goreleaser:
+    needs: release-please
+    if: >-
+      always() &&
+      (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ needs.release-please.outputs.tag_name || inputs.tag }}
           fetch-depth: 0
       - uses: actions/setup-go@v7
         with:
