@@ -3,8 +3,8 @@
 # Used by the VS Code dev container and by the `make container-*` targets, so
 # the whole toolchain (Go, clang/libbpf for the BPF program, protoc,
 # golangci-lint) works the same on Linux and macOS (amd64 and arm64).
-ARG GO_VERSION=1.26
-FROM golang:${GO_VERSION}-trixie
+# Pinned by digest for reproducible builds; Dependabot keeps it up to date.
+FROM golang:1.26-trixie@sha256:f9e99477a80ccd7adfb69780510b22c7249ce9169885f18aa762cd886e75e018
 
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \

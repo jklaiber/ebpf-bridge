@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    # Weekly, to catch new vulnerabilities and regressions on new runner images.
+    - cron: "23 5 * * 1"
 
 permissions:
   contents: read
@@ -18,13 +21,23 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version-file: go.mod
-      - uses: golangci/golangci-lint-action@v9
+      - uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9.3.0
         with:
           version: v2.15.0 # keep in sync with .devcontainer/Dockerfile
+
+  vuln:
+    name: Vulnerability check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: go.mod
+      - run: make vuln
 
   unit:
     name: Unit tests (${{ matrix.os }})
@@ -34,12 +47,12 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version-file: go.mod
       - run: make test-coverage
-      - uses: codecov/codecov-action@v7
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         if: matrix.os == 'ubuntu-latest'
         with:
           files: coverage.out
@@ -54,24 +67,53 @@ jobs:
         runner: [ubuntu-24.04, ubuntu-24.04-arm]
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version-file: go.mod
       - name: Kernel
         run: uname -a
       - run: make e2e-coverage
-      - uses: codecov/codecov-action@v7
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: e2e-coverage.out
           flags: e2e
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  e2e-kernels:
+    name: E2E tests (kernel ${{ matrix.kernel }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # 5.15 is the oldest LTS kernel with XDP devmap broadcast (5.13+).
+        kernel: ["5.15", "6.1", "6.6", "6.12", "6.18"]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
+        with:
+          go-version-file: go.mod
+      - name: Build test binaries
+        run: make e2e-build
+      - name: Run e2e tests in a VM
+        uses: cilium/little-vm-helper@003bc00af42bdd704e8b0505dc47d571081a233a # v0.0.34
+        with:
+          test-name: e2e-${{ matrix.kernel }}
+          image-version: ${{ matrix.kernel }}-main
+          host-mount: ./
+          install-dependencies: "true"
+          cmd: |
+            set -e
+            uname -a
+            cd /host
+            EBPF_BRIDGE_BIN=/host/out/e2e/ebpf-bridge ./out/e2e/e2e.test -test.v -test.count=1
+
   generated:
     name: Generated code is up to date
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build dev image
         run: docker build -t ebpf-bridge-dev .devcontainer
       - name: Regenerate BPF objects, protobuf code and mocks
@@ -83,15 +125,22 @@ jobs:
     name: Release dry run
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@v7
+      - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version-file: go.mod
-      - uses: docker/setup-qemu-action@v4
-      - uses: docker/setup-buildx-action@v4
-      - uses: goreleaser/goreleaser-action@v7
+      - uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: anchore/sbom-action/download-syft@dfcb83b97731532d72be422cbc51ee64adb6fd56 # v0.24.4
+      - uses: goreleaser/goreleaser-action@a4f02ab5355a589de60d917a659ce617ed19b3de # v7.3.0
         with:
           version: "~> v2"
           args: release --snapshot --clean
+      - name: Scan release binaries for vulnerabilities
+        run: |
+          for bin in dist/*/ebpf-bridge; do
+            echo "== $bin"
+            go tool govulncheck -mode=binary "$bin"
+          done
