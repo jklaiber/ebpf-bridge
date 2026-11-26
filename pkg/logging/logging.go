@@ -6,7 +6,7 @@ var DefaultLogger = InitializeDefaultLogger()
 
 func InitializeDefaultLogger() (logger *logrus.Logger) {
 	logger = logrus.New()
-	logger.SetLevel(logrus.DebugLevel)
+	logger.SetLevel(logrus.InfoLevel)
 	logger.SetFormatter(&logrus.TextFormatter{
 		DisableColors:    true,
 		DisableTimestamp: true,

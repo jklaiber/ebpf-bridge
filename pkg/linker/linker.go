@@ -1,11 +1,15 @@
-//go:generate mockgen -source=linker.go -destination=mocks/linker_mock.go -package=mocks Linker
+// Package linker attaches XDP programs to network interfaces.
 package linker
 
+//go:generate go tool mockgen -source=linker.go -destination=mocks/linker_mock.go -package=mocks
+
 import (
+	"errors"
 	"fmt"
 
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
+
 	"github.com/jklaiber/ebpf-bridge/pkg/hostlink"
 	"github.com/jklaiber/ebpf-bridge/pkg/logging"
 )
@@ -17,6 +21,18 @@ type Linker interface {
 	Detach() error
 }
 
+// Factory creates a Linker that attaches program to iface.
+type Factory func(iface hostlink.Link, program *ebpf.Program) Linker
+
+// NewXdpLinkerFactory returns a Factory that creates XdpLinkers.
+func NewXdpLinkerFactory() Factory {
+	return func(iface hostlink.Link, program *ebpf.Program) Linker {
+		return NewXdpLinker(iface, program)
+	}
+}
+
+// XdpLinker attaches a program in generic (SKB) mode, which works on every
+// driver including veth.
 type XdpLinker struct {
 	iface   hostlink.Link
 	program *ebpf.Program
@@ -31,11 +47,11 @@ func NewXdpLinker(iface hostlink.Link, program *ebpf.Program) *XdpLinker {
 }
 
 func (x *XdpLinker) Attach() error {
-	log.Infof("Attaching XDP program to %s", x.iface.Name())
 	if x.program == nil {
-		return fmt.Errorf("cannot attach a nil program")
+		return errors.New("cannot attach a nil program")
 	}
-	link, err := link.AttachXDP(link.XDPOptions{
+	log.Infof("Attaching XDP program to %s", x.iface.Name())
+	l, err := link.AttachXDP(link.XDPOptions{
 		Program:   x.program,
 		Interface: x.iface.Index(),
 		Flags:     link.XDPGenericMode,
@@ -43,15 +59,18 @@ func (x *XdpLinker) Attach() error {
 	if err != nil {
 		return fmt.Errorf("failed to attach XDP program to interface %s: %w", x.iface.Name(), err)
 	}
-	x.link = link
+	x.link = l
 	return nil
 }
 
 func (x *XdpLinker) Detach() error {
-	log.Infof("Detaching XDP program from %s", x.iface.Name())
-	err := x.link.Close()
-	if err != nil {
-		return fmt.Errorf("failed to detach XDP program: %w", err)
+	if x.link == nil {
+		return nil
 	}
+	log.Infof("Detaching XDP program from %s", x.iface.Name())
+	if err := x.link.Close(); err != nil {
+		return fmt.Errorf("failed to detach XDP program from interface %s: %w", x.iface.Name(), err)
+	}
+	x.link = nil
 	return nil
 }

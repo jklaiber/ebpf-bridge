@@ -2,183 +2,89 @@ package messaging
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
-	"github.com/jklaiber/ebpf-bridge/pkg/api"
-	"github.com/jklaiber/ebpf-bridge/pkg/manager/mocks"
 	"go.uber.org/mock/gomock"
+
+	"github.com/jklaiber/ebpf-bridge/pkg/api"
+	"github.com/jklaiber/ebpf-bridge/pkg/manager"
+	"github.com/jklaiber/ebpf-bridge/pkg/manager/mocks"
 )
 
-func TestMessagingServer_New(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+func ptr[T any](v T) *T { return &v }
 
-	bridgeManager := mocks.NewMockManager(ctrl)
-	server := NewMessagingServer(bridgeManager)
-	if server == nil {
-		t.Error("NewMessagingServer() returned nil")
-	}
-}
-
-func TestMessagingServer_AddBridge(t *testing.T) {
+func TestServerAddBridge(t *testing.T) {
 	tests := []struct {
-		name     string
-		mockFunc func(*mocks.MockManager)
-		testCall func(*MessagingServer) (*api.AddResponse, error)
-		wantErr  bool
+		name        string
+		in          *api.AddCommand
+		wantMonitor *int
+		managerErr  error
+		wantSuccess bool
 	}{
-		{
-			name: "AddBridge() without monitorIface with error",
-			mockFunc: func(m *mocks.MockManager) {
-				m.EXPECT().Add(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("error"))
-			},
-			testCall: func(s *MessagingServer) (*api.AddResponse, error) {
-				return s.AddBridge(context.Background(), &api.AddCommand{
-					Name:   "test",
-					Iface1: 1,
-					Iface2: 2,
-				})
-			},
-			wantErr: true,
-		},
-		{
-			name: "AddBridge() without monitorIface without error",
-			mockFunc: func(m *mocks.MockManager) {
-				m.EXPECT().Add(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			},
-			testCall: func(s *MessagingServer) (*api.AddResponse, error) {
-				return s.AddBridge(context.Background(), &api.AddCommand{
-					Name:   "test",
-					Iface1: 1,
-					Iface2: 2,
-				})
-			},
-			wantErr: false,
-		},
-		{
-			name: "AddBridge() with monitorIface with error",
-			mockFunc: func(m *mocks.MockManager) {
-				m.EXPECT().Add(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(fmt.Errorf("error"))
-			},
-			testCall: func(s *MessagingServer) (*api.AddResponse, error) {
-				return s.AddBridge(context.Background(), &api.AddCommand{
-					Name:    "test",
-					Iface1:  1,
-					Iface2:  2,
-					Monitor: new(int32),
-				})
-			},
-			wantErr: true,
-		},
-		{
-			name: "AddBridge() with monitorIface without error",
-			mockFunc: func(m *mocks.MockManager) {
-				m.EXPECT().Add(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil)
-			},
-			testCall: func(s *MessagingServer) (*api.AddResponse, error) {
-				return s.AddBridge(context.Background(), &api.AddCommand{
-					Name:    "test",
-					Iface1:  1,
-					Iface2:  2,
-					Monitor: new(int32),
-				})
-			},
-			wantErr: false,
-		},
+		{"without monitor", &api.AddCommand{Name: "br", Iface1: 1, Iface2: 2}, nil, nil, true},
+		{"with monitor", &api.AddCommand{Name: "br", Iface1: 1, Iface2: 2, Monitor: ptr[int32](3)}, ptr(3), nil, true},
+		{"manager error", &api.AddCommand{Name: "br", Iface1: 1, Iface2: 2}, nil, errors.New("boom"), false},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
+			m := mocks.NewMockManager(gomock.NewController(t))
+			m.EXPECT().Add("br", 1, 2, gomock.Eq(tt.wantMonitor)).Return(tt.managerErr)
 
-			bridgeManager := mocks.NewMockManager(ctrl)
-
-			server := NewMessagingServer(bridgeManager)
-			if server == nil {
-				t.Error("NewMessagingServer() returned nil")
+			resp, err := NewMessagingServer(m, "").AddBridge(context.Background(), tt.in)
+			if err != nil {
+				t.Fatalf("AddBridge() error = %v", err)
 			}
-
-			tt.mockFunc(bridgeManager)
-
-			out, _ := tt.testCall(server)
-			if tt.wantErr && out.Success != false {
-				t.Error("AddBridge() returned unexpected success")
+			if resp.GetSuccess() != tt.wantSuccess {
+				t.Errorf("Success = %v, want %v (%s)", resp.GetSuccess(), tt.wantSuccess, resp.GetMessage())
+			}
+			if resp.GetMessage() == "" {
+				t.Error("empty message")
 			}
 		})
 	}
 }
 
-func TestMessagingServer_RemoveBridge(t *testing.T) {
-	tests := []struct {
-		name     string
-		mockFunc func(*mocks.MockManager)
-		testCall func(*MessagingServer) (*api.RemoveResponse, error)
-		wantErr  bool
-	}{
-		{
-			name: "RemoveBridge() with error",
-			mockFunc: func(m *mocks.MockManager) {
-				m.EXPECT().Remove(gomock.Any()).Return(fmt.Errorf("error"))
-			},
-			testCall: func(s *MessagingServer) (*api.RemoveResponse, error) {
-				return s.RemoveBridge(context.Background(), &api.RemoveCommand{
-					Name: "test",
-				})
-			},
-			wantErr: true,
-		},
-		{
-			name: "RemoveBridge() without error",
-			mockFunc: func(m *mocks.MockManager) {
-				m.EXPECT().Remove(gomock.Any()).Return(nil)
-			},
-			testCall: func(s *MessagingServer) (*api.RemoveResponse, error) {
-				return s.RemoveBridge(context.Background(), &api.RemoveCommand{
-					Name: "test",
-				})
-			},
-			wantErr: false,
-		},
-	}
+func TestServerRemoveBridge(t *testing.T) {
+	for _, managerErr := range []error{nil, errors.New("boom")} {
+		m := mocks.NewMockManager(gomock.NewController(t))
+		m.EXPECT().Remove("br").Return(managerErr)
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-
-			bridgeManager := mocks.NewMockManager(ctrl)
-
-			server := NewMessagingServer(bridgeManager)
-			if server == nil {
-				t.Error("NewMessagingServer() returned nil")
-			}
-
-			tt.mockFunc(bridgeManager)
-
-			out, _ := tt.testCall(server)
-			if tt.wantErr && out.Success != false {
-				t.Error("RemoveBridge() returned unexpected success")
-			}
-		})
+		resp, err := NewMessagingServer(m, "").RemoveBridge(context.Background(), &api.RemoveCommand{Name: "br"})
+		if err != nil {
+			t.Fatalf("RemoveBridge() error = %v", err)
+		}
+		if resp.GetSuccess() != (managerErr == nil) {
+			t.Errorf("Success = %v with manager error %v", resp.GetSuccess(), managerErr)
+		}
 	}
 }
 
-func TestMessagingServer_ListBridges(t *testing.T) {
-	ctrl := gomock.NewController(t)
-	defer ctrl.Finish()
+func TestServerListBridges(t *testing.T) {
+	m := mocks.NewMockManager(gomock.NewController(t))
+	m.EXPECT().List().Return([]manager.BridgeDescription{
+		{Name: "a", Iface1: 1, Iface2: 2},
+		{Name: "b", Iface1: 3, Iface2: 4, Monitor: ptr[int32](5)},
+	})
 
-	bridgeManager := mocks.NewMockManager(ctrl)
-	server := NewMessagingServer(bridgeManager)
-	if server == nil {
-		t.Error("NewMessagingServer() returned nil")
-	}
-
-	bridgeManager.EXPECT().List().Return(nil)
-
-	_, err := server.ListBridges(context.Background(), &api.ListCommand{})
+	resp, err := NewMessagingServer(m, "").ListBridges(context.Background(), &api.ListCommand{})
 	if err != nil {
-		t.Errorf("ListBridges() error = %v", err)
+		t.Fatalf("ListBridges() error = %v", err)
+	}
+	got := resp.GetBridges()
+	if len(got) != 2 || got[0].GetName() != "a" || got[0].Monitor != nil || got[1].GetMonitor() != 5 {
+		t.Errorf("unexpected bridges %v", got)
+	}
+}
+
+func TestServerStartFailsOnBadSocket(t *testing.T) {
+	m := mocks.NewMockManager(gomock.NewController(t))
+	// The parent of the socket is a regular file, so it cannot be created.
+	file := t.TempDir() + "/file"
+	if err := writeFile(file); err != nil {
+		t.Fatal(err)
+	}
+	if err := NewMessagingServer(m, file+"/sock").Start(); err == nil {
+		t.Error("Start() succeeded, want error")
 	}
 }
